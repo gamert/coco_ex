@@ -129,7 +129,7 @@ protected:
 	bool _antialiasEnabled;	//
 	int _currLineHeight;
 
-	friend class SceneTile;
+	friend class TileScene;
 };
 
 

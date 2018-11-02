@@ -38,7 +38,7 @@ class EventListenerCustom;
 * @brief TileScene is a subclass of Node that knows how to render tile labels.
 * @js NA
 */
-class TileScene : public Node, public LabelProtocol, public BlendProtocol
+class TileScene : public Node, public BlendProtocol
 {
 public:
 	/// @name Creators
@@ -53,6 +53,12 @@ public:
 
 	bool setTILEConfig(const TILEConfig& ttfConfig);
 	const TILEConfig& getTILEConfig() const { return _fontConfig; }
+
+	/**
+	* Return length of string.
+	*/
+	int getStringLength();
+
 	/**
 	* Sets the text color of TileScene.
 	* The text color is different from the color of Node.
@@ -110,7 +116,10 @@ public:
 	* @since v3.2.0
 	*/
 	float getLineHeight() const;
-
+	/**
+	Returns font size
+	*/
+	float getRenderingTileSize()const;
 
 	TileAtlas* getTileAtlas() { return _fontAtlas; }
 
@@ -134,7 +143,6 @@ public:
 
 	virtual void removeAllChildrenWithCleanup(bool cleanup) override;
 	virtual void removeChild(Node* child, bool cleanup = true) override;
-	virtual void setGlobalZOrder(float globalZOrder) override;
 
 
 CC_CONSTRUCTOR_ACCESS:
@@ -165,8 +173,6 @@ protected:
 	virtual void setTileAtlas(TileAtlas* atlas, bool distanceFieldEnabled = false, bool useA8Shader = false);
 	bool getTileLetterDef(char32_t character, TileDefinition& letterDef) const;
 
-	void computeStringNumLines();
-
 	void onDraw(const Mat4& transform, bool transformUpdated);
 	void drawSelf(bool visibleByCamera, Renderer* renderer, uint32_t flags);
 
@@ -180,16 +186,10 @@ protected:
 
 	bool updateQuads();
 
-	void createSpriteForSystemTile(const TileDefinition& fontDef);
-	void createShadowSpriteForSystemTile(const TileDefinition& fontDef);
-
 	virtual void updateShaderProgram();
 	bool setTILEConfigInternal(const TILEConfig& ttfConfig);
 	void scaleTileSizeDown(float fontSize);
 	void restoreTileSize();
-	void updateLetterSpriteScale(Sprite* sprite);
-	int getFirstCharLen(const TileString& utf32Text, int startIndex, int textLen) const;
-	int getFirstWordLen(const TileString& utf32Text, int startIndex, int textLen) const;
 
 	void reset();
 
@@ -198,11 +198,11 @@ protected:
 	virtual void updateColor() override;
 
 	bool _contentDirty;
-	TileString _utf32Text;		//zz save tile list here...
+	TileString _utf32Text;		//from map request
 
-	TileAtlas* _fontAtlas;
-	Vector<SpriteBatchNode*> _batchNodes;
-	std::vector<LetterInfo> _lettersInfo;
+	TileAtlas* _fontAtlas;		//resource 
+	Vector<SpriteBatchNode*> _batchNodes;	//for batch
+	std::vector<LetterInfo> _lettersInfo;	//drawing letters
 
 	//! used for optimization
 	Sprite *_reusedLetter;

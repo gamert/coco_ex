@@ -159,8 +159,6 @@ TileScene* TileScene::create()
 TileScene::TileScene()
 	: _fontAtlas(nullptr)
 	, _reusedLetter(nullptr)
-	, _horizontalKernings(nullptr)
-	, _boldEnabled(false)
 {
 	setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 	reset();
@@ -431,10 +429,7 @@ bool TileScene::alignText()
 			_batchNodes.at(0)->reserveCapacity(_utf32Text.size());
 
 		_reusedLetter->setBatchNode(_batchNodes.at(0));
-
 		_lengthOfString = 0;
-
-		computeAlignmentOffset();
 
 		if (!updateQuads()) {
 			ret = false;
@@ -460,6 +455,7 @@ bool TileScene::updateQuads()
 	{
 		if (_lettersInfo[ctr].valid)
 		{
+			//z: get from atlas
 			auto& letterDef = _fontAtlas->_letterDefinitions[_lettersInfo[ctr].utf32Char];
 
 			_reusedRect.size.height = letterDef.height;
@@ -467,7 +463,8 @@ bool TileScene::updateQuads()
 			_reusedRect.origin.x = letterDef.U;
 			_reusedRect.origin.y = letterDef.V;
 
-			auto py = _lettersInfo[ctr].positionY + _letterOffsetY;
+			auto py = _lettersInfo[ctr].positionY ;//+ _letterOffsetY
+			//
 			if (_labelHeight > 0.f) {
 				if (py > _tailoredTopY)
 				{
@@ -485,6 +482,7 @@ bool TileScene::updateQuads()
 			auto lineIndex = _lettersInfo[ctr].lineIndex;
 			auto px = _lettersInfo[ctr].positionX + letterDef.width / 2 * _bmfontScale + _linesOffsetX[lineIndex];
 
+			//´°¿ÚµÄ¿í¶È£¿
 			if (_labelWidth > 0.f) {
 				if (this->isHorizontalClamped(px, lineIndex)) {
 					if (_overflow == Overflow::CLAMP) {
@@ -700,26 +698,8 @@ void TileScene::drawSelf(bool visibleByCamera, Renderer* renderer, uint32_t flag
 	}
 }
 
-void TileScene::setSystemTileName(const std::string& systemTile)
-{
-	if (systemTile != _systemTile)
-	{
-		_systemTile = systemTile;
-		_currentLabelType = LabelType::STRING_TEXTURE;
-		_systemTileDirty = true;
-	}
-}
 
-void TileScene::setSystemTileSize(float fontSize)
-{
-	if (_systemTileSize != fontSize)
-	{
-		_systemTileSize = fontSize;
-		_originalTileSize = fontSize;
-		_currentLabelType = LabelType::STRING_TEXTURE;
-		_systemTileDirty = true;
-	}
-}
+
 
 ///// PROTOCOL STUFF
 Sprite* TileScene::getLetter(int letterIndex)
@@ -800,83 +780,10 @@ void TileScene::setLineHeight(float height)
 
 float TileScene::getLineHeight() const
 {
-	CCASSERT(_currentLabelType != LabelType::STRING_TEXTURE, "Not supported system font!");
-	return _textSprite ? 0.0f : _lineHeight * _bmfontScale;
+	return _lineHeight * _bmfontScale;
 }
 
-void TileScene::setLineSpacing(float height)
-{
-	if (_lineSpacing != height)
-	{
-		_lineSpacing = height;
-		_contentDirty = true;
-	}
-}
 
-float TileScene::getLineSpacing() const
-{
-	return _lineSpacing;
-}
-
-void TileScene::setAdditionalKerning(float space)
-{
-
-	if (_currentLabelType != LabelType::STRING_TEXTURE)
-	{
-		if (_additionalKerning != space)
-		{
-			_additionalKerning = space;
-			_contentDirty = true;
-		}
-	}
-	else
-		CCLOG("TileScene::setAdditionalKerning not supported on LabelType::STRING_TEXTURE");
-}
-
-float TileScene::getAdditionalKerning() const
-{
-	CCASSERT(_currentLabelType != LabelType::STRING_TEXTURE, "Not supported system font!");
-
-	return _additionalKerning;
-}
-
-void TileScene::computeStringNumLines()
-{
-	int quantityOfLines = 1;
-
-	if (_utf32Text.empty())
-	{
-		_numberOfLines = 0;
-		return;
-	}
-
-	// count number of lines
-	size_t stringLen = _utf32Text.length();
-	for (size_t i = 0; i < stringLen - 1; ++i)
-	{
-		if (_utf32Text[i] == StringUtils::UnicodeCharacters::NewLine)
-		{
-			quantityOfLines++;
-		}
-	}
-
-	_numberOfLines = quantityOfLines;
-}
-
-int TileScene::getStringNumLines()
-{
-	if (_contentDirty)
-	{
-		updateContent();
-	}
-
-	if (_currentLabelType == LabelType::STRING_TEXTURE)
-	{
-		computeStringNumLines();
-	}
-
-	return _numberOfLines;
-}
 
 int TileScene::getStringLength()
 {
@@ -897,27 +804,6 @@ void TileScene::setOpacityModifyRGB(bool isOpacityModifyRGB)
 void TileScene::updateDisplayedColor(const Color3B& parentColor)
 {
 	Node::updateDisplayedColor(parentColor);
-
-	if (_textSprite)
-	{
-		_textSprite->updateDisplayedColor(_displayedColor);
-	}
-
-	if (_shadowNode)
-	{
-		_shadowNode->updateDisplayedColor(_displayedColor);
-	}
-
-	if (_underlineNode)
-	{
-		// FIXME: _underlineNode is not a sprite/label. It is a DrawNode
-		// and updating its color doesn't work. it must be re-drawn,
-		// which makes it super expensive to change update it frequently
-		// Correct solution is to update the DrawNode directly since we know it is
-		// a line. Returning a pointer to the line is an option
-		_contentDirty = true;
-	}
-
 	for (auto&& it : _letters)
 	{
 		it.second->updateDisplayedColor(_displayedColor);
@@ -927,16 +813,6 @@ void TileScene::updateDisplayedColor(const Color3B& parentColor)
 void TileScene::updateDisplayedOpacity(GLubyte parentOpacity)
 {
 	Node::updateDisplayedOpacity(parentOpacity);
-
-	if (_textSprite)
-	{
-		_textSprite->updateDisplayedOpacity(_displayedOpacity);
-		if (_shadowNode)
-		{
-			_shadowNode->updateDisplayedOpacity(_displayedOpacity);
-		}
-	}
-
 	for (auto&& it : _letters)
 	{
 		it.second->updateDisplayedOpacity(_displayedOpacity);
@@ -948,13 +824,6 @@ void TileScene::updateDisplayedOpacity(GLubyte parentOpacity)
 // that's fine but it should be documented
 void TileScene::setTextColor(const Color4B &color)
 {
-	CCASSERT(_currentLabelType == LabelType::TTF || _currentLabelType == LabelType::STRING_TEXTURE, "Only supported system font and ttf!");
-
-	if (_currentLabelType == LabelType::STRING_TEXTURE && _textColor != color)
-	{
-		_contentDirty = true;
-	}
-
 	_textColor = color;
 	_textColorF.r = _textColor.r / 255.0f;
 	_textColorF.g = _textColor.g / 255.0f;
@@ -1003,7 +872,7 @@ std::string TileScene::getDescription() const
 	char tmp[50];
 	sprintf(tmp, "<TileScene | Tag = %d, TileScene = >", _tag);
 	std::string ret = tmp;
-	ret += _utf8Text;
+	//ret += _utf8Text;
 
 	return ret;
 }
@@ -1028,14 +897,6 @@ void TileScene::setBlendFunc(const BlendFunc &blendFunc)
 {
 	_blendFunc = blendFunc;
 	_blendFuncDirty = true;
-	if (_textSprite)
-	{
-		_textSprite->setBlendFunc(blendFunc);
-		if (_shadowNode)
-		{
-			_shadowNode->setBlendFunc(blendFunc);
-		}
-	}
 }
 
 void TileScene::removeAllChildrenWithCleanup(bool cleanup)
@@ -1066,85 +927,21 @@ TileDefinition TileScene::_getTileDefinition() const
 
 	systemTileDef._fontName = fontName;
 	systemTileDef._fontSize = _systemTileSize;
-	systemTileDef._alignment = _hAlignment;
-	systemTileDef._vertAlignment = _vAlignment;
 	systemTileDef._dimensions.width = _labelWidth;
 	systemTileDef._dimensions.height = _labelHeight;
 	systemTileDef._fontFillColor.r = _textColor.r;
 	systemTileDef._fontFillColor.g = _textColor.g;
 	systemTileDef._fontFillColor.b = _textColor.b;
 	systemTileDef._fontAlpha = _textColor.a;
-	systemTileDef._shadow._shadowEnabled = false;
-	systemTileDef._enableWrap = _enableWrap;
-	systemTileDef._overflow = (int)_overflow;
-
-	if (_currLabelEffect == LabelEffect::OUTLINE && _outlineSize > 0.f)
-	{
-		systemTileDef._stroke._strokeEnabled = true;
-		systemTileDef._stroke._strokeSize = _outlineSize;
-		systemTileDef._stroke._strokeColor.r = _effectColorF.r * 255;
-		systemTileDef._stroke._strokeColor.g = _effectColorF.g * 255;
-		systemTileDef._stroke._strokeColor.b = _effectColorF.b * 255;
-		systemTileDef._stroke._strokeAlpha = _effectColorF.a * 255;
-	}
-	else
-	{
-		systemTileDef._stroke._strokeEnabled = false;
-	}
-
-#if (CC_TARGET_PLATFORM != CC_PLATFORM_ANDROID) && (CC_TARGET_PLATFORM != CC_PLATFORM_IOS)
-	if (systemTileDef._stroke._strokeEnabled)
-	{
-		CCLOGERROR("Stroke Currently only supported on iOS and Android!");
-	}
-	systemTileDef._stroke._strokeEnabled = false;
-#endif
 
 	return systemTileDef;
 }
 
-void TileScene::setGlobalZOrder(float globalZOrder)
-{
-	Node::setGlobalZOrder(globalZOrder);
-	if (_textSprite)
-	{
-		_textSprite->setGlobalZOrder(globalZOrder);
-		if (_shadowNode)
-		{
-			_shadowNode->setGlobalZOrder(globalZOrder);
-		}
-	}
-}
 
 float TileScene::getRenderingTileSize()const
 {
-	float fontSize;
-	if (_currentLabelType == LabelType::BMTILE) {
-		fontSize = _bmTileSize;
-	}
-	else if (_currentLabelType == LabelType::TTF) {
-		fontSize = this->getTILEConfig().fontSize;
-	}
-	else if (_currentLabelType == LabelType::STRING_TEXTURE) {
-		fontSize = _systemTileSize;
-	}
-	else { //FIXME: find a way to calculate char map font size
-		fontSize = this->getLineHeight();
-	}
+	float fontSize = this->getTILEConfig().fontSize;
 	return fontSize;
-}
-
-void TileScene::enableWrap(bool enable)
-{
-	if (enable == _enableWrap || _overflow == Overflow::RESIZE_HEIGHT) {
-		return;
-	}
-
-	this->_enableWrap = enable;
-
-	this->rescaleWithOriginalTileSize();
-
-	_contentDirty = true;
 }
 
 
@@ -1156,24 +953,5 @@ void TileScene::rescaleWithOriginalTileSize()
 	}
 }
 
-
-void TileScene::updateLetterSpriteScale(Sprite* sprite)
-{
-	if (_currentLabelType == LabelType::BMTILE && _bmTileSize > 0)
-	{
-		sprite->setScale(_bmfontScale);
-	}
-	else
-	{
-		if (std::abs(_bmTileSize) < FLT_EPSILON)
-		{
-			sprite->setScale(0);
-		}
-		else
-		{
-			sprite->setScale(1.0);
-		}
-	}
-}
 
 NS_CC_END
