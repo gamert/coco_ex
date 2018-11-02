@@ -13,12 +13,16 @@
 
 NS_CC_BEGIN
 
+//TODO: 测试大小是否有效降低mem dc等...
 const int TileAtlas::CacheTextureWidth = 512;
 const int TileAtlas::CacheTextureHeight = 512;
 const char* TileAtlas::CMD_PURGE_TILEATLAS = "__cc_PURGE_TILEATLAS";
 const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
-unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, Rect &outRect);
+unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, Rect &outRect)
+{
+	return NULL;
+}
 
 void renderTileAt(unsigned char *dest, int posX, int posY, unsigned char* bitmap, long bitmapWidth, long bitmapHeight)
 {
@@ -63,6 +67,8 @@ TileAtlas::TileAtlas()
 		_letterEdgeExtend = 2;
 		_letterPadding = 0;
 
+		pixelFormat = (int)Texture2D::PixelFormat::A8;	//ETC
+
 		reinit();
 
 #if CC_ENABLE_CACHE_TEXTURE_DATA
@@ -88,9 +94,8 @@ void TileAtlas::reinit()
 	_currentPageData = new (std::nothrow) unsigned char[_currentPageDataSize];
 	memset(_currentPageData, 0, _currentPageDataSize);
 
-	auto  pixelFormat = Texture2D::PixelFormat::A8;
 	texture->initWithData(_currentPageData, _currentPageDataSize,
-		pixelFormat, CacheTextureWidth, CacheTextureHeight, Size(CacheTextureWidth, CacheTextureHeight));
+		(Texture2D::PixelFormat)pixelFormat, CacheTextureWidth, CacheTextureHeight, Size(CacheTextureWidth, CacheTextureHeight));
 
 	addTexture(texture, 0);
 	texture->release();
@@ -123,7 +128,6 @@ TileAtlas::~TileAtlas()
 void TileAtlas::reset()
 {
 	releaseTextures();
-
 	_currLineHeight = 0;
 	_currentPage = 0;
 	_currentPageOrigX = 0;
@@ -158,7 +162,7 @@ void TileAtlas::listenRendererRecreated(EventCustom * /*event*/)
 	purgeTexturesAtlas();
 }
 
-void TileAtlas::addLetterDefinition(TileID utf32Char, const TileDefinition &letterDefinition)
+void TileAtlas::addLetterDefinition(TileID utf32Char, const TileLetterDefinition &letterDefinition)
 {
 	_letterDefinitions[utf32Char] = letterDefinition;
 }
@@ -174,7 +178,7 @@ void TileAtlas::scaleFontLetterDefinition(float scaleFactor)
 	}
 }
 
-bool TileAtlas::getLetterDefinitionForChar(TileID utf32Char, TileDefinition &letterDefinition)
+bool TileAtlas::getLetterDefinitionForChar(TileID utf32Char, TileLetterDefinition &letterDefinition)
 {
 	auto outIterator = _letterDefinitions.find(utf32Char);
 
@@ -190,20 +194,19 @@ bool TileAtlas::getLetterDefinitionForChar(TileID utf32Char, TileDefinition &let
 }
 
 
-void TileAtlas::findNewCharacters(const TileString& u32Text, TCharCodeMap& charCodeMap)
+void TileAtlas::findNewCharacters(const TileString& u32Text, TileString &newChars)
 {
-	TileString newChars;
 	if (_letterDefinitions.empty())
 	{
-		newChars.append(u32Text);
+		newChars = u32Text;
 	}
 	else
 	{
-		auto length = u32Text.length();
+		auto length = u32Text.size();
 		newChars.reserve(length);
 		for (size_t i = 0; i < length; ++i)
 		{
-			auto outIterator = _letterDefinitions.find(u32Text[i]);
+			auto outIterator = _letterDefinitions.find(u32Text[i].id);
 			if (outIterator == _letterDefinitions.end())
 			{
 				newChars.push_back(u32Text[i]);
@@ -215,9 +218,9 @@ void TileAtlas::findNewCharacters(const TileString& u32Text, TCharCodeMap& charC
 //muti tile prepare
 bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 {
-	TCharCodeMap codeMapOfNewChar;
-	findNewCharacters(utf32Text, codeMapOfNewChar);
-	if (codeMapOfNewChar.empty())
+	TileString newChars;
+	findNewCharacters(utf32Text, newChars);
+	if (newChars.empty())
 	{
 		return false;
 	}
@@ -228,17 +231,16 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 	long bitmapHeight;
 	int glyphHeight;
 	Rect tempRect;
-	TileDefinition tempDef;
+	TileLetterDefinition tempDef;
 
 	auto scaleFactor = CC_CONTENT_SCALE_FACTOR();
-	auto  pixelFormat = Texture2D::PixelFormat::A8;
 
 	float startY = _currentPageOrigY;
 
-	for (auto&& it : codeMapOfNewChar)
+	for (auto&& it : newChars)
 	{
-		//from TextureManager
-		unsigned char* bitmap = getTileBitmap(it.second, bitmapWidth, bitmapHeight, tempRect);
+		//from TextureManager: TODO: 多帧如何处理？
+		unsigned char* bitmap = getTileBitmap(it.id, bitmapWidth, bitmapHeight, tempRect);
 		if (bitmap && bitmapWidth > 0 && bitmapHeight > 0)
 		{
 			tempDef.validDefinition = true;
@@ -275,7 +277,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 						tex->setAliasTexParameters();
 					}
 					tex->initWithData(_currentPageData, _currentPageDataSize,
-						pixelFormat, CacheTextureWidth, CacheTextureHeight, Size(CacheTextureWidth, CacheTextureHeight));
+						(Texture2D::PixelFormat)pixelFormat, CacheTextureWidth, CacheTextureHeight, Size(CacheTextureWidth, CacheTextureHeight));
 					addTexture(tex, _currentPage);
 					tex->release();
 				}
@@ -313,7 +315,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 			_currentPageOrigX += 1;
 		}
 
-		_letterDefinitions[it.first] = tempDef;
+		_letterDefinitions[it.id] = tempDef;
 	}
 
 	unsigned char *data = nullptr;
@@ -333,6 +335,16 @@ Texture2D* TileAtlas::getTexture(int slot)
 	return _atlasTextures[slot];
 }
 
+std::string TileAtlas::getTileName() const
+{
+	std::string fontName = "";//_fontFreeType ? _fontFreeType->getFontName() : 
+	if (fontName.empty()) return fontName;
+	auto idx = fontName.rfind("/");
+	if (idx != std::string::npos) { return fontName.substr(idx + 1); }
+	idx = fontName.rfind("\\");
+	if (idx != std::string::npos) { return fontName.substr(idx + 1); }
+	return fontName;
+}
 
 void TileAtlas::setAliasTexParameters()
 {

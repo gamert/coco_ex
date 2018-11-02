@@ -16,8 +16,8 @@ class EventListenerCustom;
 
 typedef float UAxis;
 
-//ref : FontLetterDefinition
-struct TileDefinition
+//ref : 
+struct TileLetterDefinition
 {
 	UAxis U;		//纹理在atlas上的位置.
 	UAxis V;
@@ -29,22 +29,39 @@ struct TileDefinition
 	bool validDefinition;
 };
 
+/**
+*/
+#define CC_DEFAULT_TILE_LABEL_SIZE  32
+/**
+* @struct TILEConfig
+* @see `GlyphCollection`
+*/
+typedef struct _tileConfig
+{
+	std::string tileFilePath;
+	float tileSize;
+	_tileConfig(float size = CC_DEFAULT_TILE_LABEL_SIZE) :tileSize(size)
+	{
+	}
+} TILEConfig;
+
 //
-typedef char32_t TileID;
+typedef unsigned int TileID;
 struct TileChar
 {
-	TileID id;
-	int x, y;
+	TileChar(TileID _id,int _x,int _y):id(_id), x(_x), y(_y)
+	{
+	}
+	TileID id;	//TODO: FrameIndex,PackIndex,TexID
+	int x,y;
 };
-//typedef std::vector<TileChar> TileString;
-
-typedef std::u32string TileString;	//
-typedef std::unordered_map<unsigned int, unsigned int> TCharCodeMap;
+typedef std::vector<TileChar> TileString;
+//typedef std::u32string TileString;	//
 typedef std::unordered_map<ssize_t, Texture2D*> TTexture2DMap;
 //ref : FontFreeType
 void renderTileAt(unsigned char *dest, int posX, int posY, unsigned char* bitmap, long bitmapWidth, long bitmapHeight);
 
-//TODO : use global buff
+//TODO : use global buffer
 class TileAtlas : public Ref
 {
 public:
@@ -62,8 +79,8 @@ public:
 	*/
 	virtual ~TileAtlas();
 
-	void addLetterDefinition(TileID utf32Char, const TileDefinition &letterDefinition);
-	bool getLetterDefinitionForChar(TileID utf32Char, TileDefinition &letterDefinition);
+	void addLetterDefinition(TileID utf32Char, const TileLetterDefinition &letterDefinition);
+	bool getLetterDefinitionForChar(TileID utf32Char, TileLetterDefinition &letterDefinition);
 
 	bool prepareLetterDefinitions(const TileString& utf16String);
 
@@ -72,6 +89,7 @@ public:
 	float getLineHeight() const { return _lineHeight; }
 	void  setLineHeight(float newHeight) { _lineHeight = newHeight; }
 
+	std::string getTileName() const;
 
 	Texture2D* getTexture(int slot);
 
@@ -101,7 +119,7 @@ protected:
 	void reset();
 	void reinit();
 	void releaseTextures();
-	void findNewCharacters(const TileString& u32Text, TCharCodeMap& charCodeMap);
+	void findNewCharacters(const TileString& u32Text, TileString &newChars);
 
 	/**
 	* Scale each font letter by scaleFactor.
@@ -110,8 +128,10 @@ protected:
 	*/
 	void scaleFontLetterDefinition(float scaleFactor);
 
+	int  pixelFormat;//Texture2D::PixelFormat
+
 	TTexture2DMap _atlasTextures;
-	std::unordered_map<TileID, TileDefinition> _letterDefinitions;
+	std::unordered_map<TileID, TileLetterDefinition> _letterDefinitions;
 	float _lineHeight;
 
 	// Dynamic GlyphCollection related stuff
@@ -129,7 +149,7 @@ protected:
 	bool _antialiasEnabled;	//
 	int _currLineHeight;
 
-	friend class TileScene;
+	friend class TileSceneLayer;
 };
 
 
@@ -137,21 +157,21 @@ protected:
 
 
 
-//管理Tile的快速绘制
-class CSceneTile
-{
-public:
-
-	//// 显示大地表
-	//if (sMap[i].wTile)
-	//{
-	//	pTex = GetTex(PACKAGE_Tiles, sMap[i].wTile, nPriority);
-	//	if (pTex)
-	//		sprite->DrawTexture(x0, y0, pTex);
-	//}
-
-
-};
+////管理Tile的快速绘制
+//class CSceneTile
+//{
+//public:
+//
+//	//// 显示大地表
+//	//if (sMap[i].wTile)
+//	//{
+//	//	pTex = GetTex(PACKAGE_Tiles, sMap[i].wTile, nPriority);
+//	//	if (pTex)
+//	//		sprite->DrawTexture(x0, y0, pTex);
+//	//}
+//
+//
+//};
 
 NS_CC_END
 
