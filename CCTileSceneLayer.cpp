@@ -1,6 +1,3 @@
-
-#include <algorithm>
-
 #include "CCTileSceneLayer.h"
 #include "CCTileAtlas.h"
 #include "CCTileAtlasCache.h"
@@ -266,7 +263,8 @@ static Texture2D* _getTexture(TileSceneLayer* label)
 
 void TileSceneLayer::updateShaderProgram()
 {
-	_uniformTextColor = glGetUniformLocation(getGLProgram()->getProgram(), "u_textColor");
+	_uniformTextColor = getGLProgram()->getUniformLocationForName("u_textColor");
+	//_uniformTextColor = glGetUniformLocation(getGLProgram()->getProgram(), );
 }
 
 void TileSceneLayer::setTileAtlas(TileAtlas* atlas, bool distanceFieldEnabled /* = false */, bool useA8Shader /* = false */)
@@ -972,26 +970,6 @@ void TileSceneLayer::recordPlaceholderInfo(int letterIndex, TileID utf32Char)
 }
 
 
-void TileScene::Init()
-{
-	TILEConfig ttfConfig;
 
-	SmTile = TileSceneLayer::create();
-	ttfConfig.tileFilePath = "SmTile";
-	ttfConfig.tileSize = 48;
-	SmTile->setTILEConfig(ttfConfig);
-
-	BgTile = TileSceneLayer::create();
-	ttfConfig.tileFilePath = "BgTile";
-	ttfConfig.tileSize = 256;
-	BgTile->setTILEConfig(ttfConfig);
-
-	SmObject = TileSceneLayer::create();
-	ttfConfig.tileFilePath = "SmObject";
-	ttfConfig.tileSize = 32;
-	SmObject->setTILEConfig(ttfConfig);
-
-
-}
 
 NS_CC_END

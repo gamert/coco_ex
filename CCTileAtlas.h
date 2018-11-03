@@ -1,12 +1,12 @@
 #ifndef _CCTileAtlas_h_
 #define _CCTileAtlas_h_
 
-#include <string>
-#include <unordered_map>
 
 #include "platform/CCPlatformMacros.h"
 #include "base/CCRef.h"
 #include "platform/CCStdC.h" // ssize_t on windows
+//#include <string>
+#include <unordered_map>
 
 NS_CC_BEGIN
 

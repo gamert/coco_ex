@@ -273,19 +273,6 @@ private:
 // end group
 /// @}
 
-
-class TileScene
-{
-public:
-	TileSceneLayer *SmTile;
-	TileSceneLayer *BgTile;
-	TileSceneLayer *SmObject;
-	TileSceneLayer *Water;
-
-	void Init();
-
-};
-
 NS_CC_END
 
 #endif /*__COCOS2D_CCLABEL_H */

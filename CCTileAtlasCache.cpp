@@ -1,9 +1,6 @@
 
 #include "CCTileAtlasCache.h"
-//#include "base/CCDirector.h"
 #include "CCTileAtlas.h"
-//#include "CCTileSceneLayer.h"
-//#include "platform/CCFileUtils.h"
 
 NS_CC_BEGIN
 
