@@ -263,7 +263,9 @@ static Texture2D* _getTexture(TileSceneLayer* label)
 
 void TileSceneLayer::updateShaderProgram()
 {
-	_uniformTextColor = getGLProgram()->getUniformLocationForName("u_textColor");
+	GLProgram* glp = getGLProgram();
+	if(glp)
+		_uniformTextColor = glp->getUniformLocationForName("u_textColor");
 	//_uniformTextColor = glGetUniformLocation(getGLProgram()->getProgram(), );
 }
 
@@ -533,7 +535,6 @@ bool TileSceneLayer::setTILEConfigInternal(const TILEConfig& ttfConfig)
 	}
 	setTileAtlas(newAtlas, false, true);
 	_tileConfig = ttfConfig;
-	updateShaderProgram();
 	return true;
 }
 
