@@ -263,6 +263,8 @@ static Texture2D* _getTexture(TileSceneLayer* label)
 
 void TileSceneLayer::updateShaderProgram()
 {
+	setGLProgramState(GLProgramState::getOrCreateWithGLProgramName(GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR));
+
 	GLProgram* glp = getGLProgram();
 	if(glp)
 		_uniformTextColor = glp->getUniformLocationForName("u_textColor");
@@ -424,8 +426,8 @@ bool TileSceneLayer::alignText()
 			_batchNodes.at(0)->reserveCapacity(_utf32Text.size());
 
 		_reusedLetter->setBatchNode(_batchNodes.at(0));
-		_lengthOfString = 0;
-
+		//_lengthOfString = 0;
+		getStringLength();
 		//如果是文字，那么通过格式化进行定位...
 		for (int i = 0; i < (int)_utf32Text.size(); ++i)
 		{

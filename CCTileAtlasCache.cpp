@@ -39,7 +39,7 @@ TileAtlas* TileAtlasCache::getTileAtlasTTF(const _tileConfig* config)
 		if (tempAtlas)
 		{
 			_atlasMap[atlasName] = tempAtlas;
-			return _atlasMap[atlasName];
+			return tempAtlas;
 		}
 		//}
 	}

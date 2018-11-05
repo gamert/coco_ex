@@ -10,6 +10,9 @@
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventType.h"
 
+//use 
+unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, NS_CC::Rect &outRect);
+
 NS_CC_BEGIN
 
 //TODO: 测试大小是否有效降低mem dc等...
@@ -18,10 +21,7 @@ const int TileAtlas::CacheTextureHeight = 512;
 const char* TileAtlas::CMD_PURGE_TILEATLAS = "__cc_PURGE_TILEATLAS";
 const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
-unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, Rect &outRect)
-{
-	return NULL;
-}
+
 
 void renderTileAt(unsigned char *dest, int posX, int posY, unsigned char* bitmap, long bitmapWidth, long bitmapHeight)
 {
@@ -63,10 +63,10 @@ TileAtlas::TileAtlas()
 		_currentPage = 0;
 		_currentPageOrigX = 0;
 		_currentPageOrigY = 0;
-		_letterEdgeExtend = 2;
+		_letterEdgeExtend = 0;
 		_letterPadding = 0;
 
-		pixelFormat = (int)Texture2D::PixelFormat::A8;	//ETC
+		pixelFormat = (int)Texture2D::PixelFormat::S3TC_DXT3;	//ETC
 
 		reinit();
 
@@ -86,18 +86,32 @@ void TileAtlas::reinit()
 		delete[]_currentPageData;
 		_currentPageData = nullptr;
 	}
-	auto texture = new (std::nothrow) Texture2D;
-
 	_currentPageDataSize = CacheTextureWidth * CacheTextureHeight;
-
 	_currentPageData = new (std::nothrow) unsigned char[_currentPageDataSize];
+
+	assert(_currentPage == 0);
+	addOnePage();
+}
+
+
+Texture2D *TileAtlas::addOnePage()
+{
 	memset(_currentPageData, 0, _currentPageDataSize);
 
-	texture->initWithData(_currentPageData, _currentPageDataSize,
+	Texture2D *tex = new (std::nothrow) Texture2D;
+	//if (_antialiasEnabled)
+	//{
+	//	tex->setAntiAliasTexParameters();
+	//}
+	//else
+	//{
+	//	tex->setAliasTexParameters();
+	//}
+	tex->initWithData(_currentPageData, _currentPageDataSize,
 		(Texture2D::PixelFormat)pixelFormat, CacheTextureWidth, CacheTextureHeight, Size(CacheTextureWidth, CacheTextureHeight));
-
-	addTexture(texture, 0);
-	texture->release();
+	addTexture(tex, _currentPage);
+	tex->release();
+	return tex;
 }
 
 TileAtlas::~TileAtlas()
@@ -260,25 +274,11 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 
 					_atlasTextures[_currentPage]->updateWithData(data, 0, startY,
 						CacheTextureWidth, CacheTextureHeight - startY);
-
 					startY = 0.0f;
-
 					_currentPageOrigY = 0;
-					memset(_currentPageData, 0, _currentPageDataSize);
 					_currentPage++;
-					auto tex = new (std::nothrow) Texture2D;
-					if (_antialiasEnabled)
-					{
-						tex->setAntiAliasTexParameters();
-					}
-					else
-					{
-						tex->setAliasTexParameters();
-					}
-					tex->initWithData(_currentPageData, _currentPageDataSize,
-						(Texture2D::PixelFormat)pixelFormat, CacheTextureWidth, CacheTextureHeight, Size(CacheTextureWidth, CacheTextureHeight));
-					addTexture(tex, _currentPage);
-					tex->release();
+
+					addOnePage();
 				}
 			}
 			glyphHeight = static_cast<int>(bitmapHeight) + _letterPadding + _letterEdgeExtend;

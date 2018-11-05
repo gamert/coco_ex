@@ -121,6 +121,7 @@ protected:
 	void releaseTextures();
 	void findNewCharacters(const TileString& u32Text, TileString &newChars);
 
+	Texture2D *addOnePage();
 	/**
 	* Scale each font letter by scaleFactor.
 	*
