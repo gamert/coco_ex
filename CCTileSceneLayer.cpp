@@ -263,7 +263,8 @@ static Texture2D* _getTexture(TileSceneLayer* label)
 
 void TileSceneLayer::updateShaderProgram()
 {
-	if (TileAtlas::DEF_FORMAT == (int)Texture2D::PixelFormat::A8)
+	//
+	if (_tileConfig.pixelFormat == (int)Texture2D::PixelFormat::A8)
 	{
 		setGLProgramState(GLProgramState::getOrCreateWithGLProgramName(GLProgram::SHADER_NAME_LABEL_NORMAL));
 	}
@@ -481,7 +482,8 @@ bool TileSceneLayer::updateQuads()
 			_reusedRect.origin.y = letterDef.V;
 
 			//暂时不支持裁切..
-			auto py = _lettersInfo[ctr].positionY ;//+ _letterOffsetY
+			//FIX&&TODO: check (-letterDef.offsetY)
+			auto py = _lettersInfo[ctr].positionY - letterDef.offsetY;//+ _letterOffsetY
 			//
 			//if (_labelHeight > 0.f) {
 			//	if (py > _tailoredTopY)
@@ -523,7 +525,8 @@ bool TileSceneLayer::updateQuads()
 			if (_reusedRect.size.height > 0.f && _reusedRect.size.width > 0.f)
 			{
 				_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
-				float letterPositionX = _lettersInfo[ctr].positionX;// +_linesOffsetX[_lettersInfo[ctr].lineIndex];
+				//fix: 原始图有位置偏移 
+				float letterPositionX = _lettersInfo[ctr].positionX + letterDef.offsetX;// +_linesOffsetX[_lettersInfo[ctr].lineIndex];
 				_reusedLetter->setPosition(letterPositionX, py);
 				auto index = static_cast<int>(_batchNodes.at(letterDef.textureID)->getTextureAtlas()->getTotalQuads());
 				_lettersInfo[ctr].atlasIndex = index;

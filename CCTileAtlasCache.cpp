@@ -35,7 +35,7 @@ TileAtlas* TileAtlasCache::getTileAtlasTTF(const _tileConfig* config)
 		//if (font)
 		//{
 		//	auto tempAtlas = font->createFontAtlas();
-		auto tempAtlas = new (std::nothrow) TileAtlas();
+		auto tempAtlas = new (std::nothrow) TileAtlas(config->pixelFormat);
 		if (tempAtlas)
 		{
 			_atlasMap[atlasName] = tempAtlas;

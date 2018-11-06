@@ -10,22 +10,22 @@
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventType.h"
 
-inline int PixelFormatBytes(cocos2d::Texture2D::PixelFormat p)
+inline int PixelFormatBits(cocos2d::Texture2D::PixelFormat p)
 {
 	switch (p)
 	{
 	case cocos2d::Texture2D::PixelFormat::AUTO:
 		break;
 	case cocos2d::Texture2D::PixelFormat::BGRA8888:
-		return 4;
+		return 4 * 8;
 	case cocos2d::Texture2D::PixelFormat::RGBA8888:
-		return 4;
+		return 4 * 8;
 	case cocos2d::Texture2D::PixelFormat::RGB888:
-		return 3;
+		return 3 * 8;
 	case cocos2d::Texture2D::PixelFormat::RGB565:
-		return 2;
+		return 2 * 8;
 	case cocos2d::Texture2D::PixelFormat::A8:
-		return 1;
+		return 8;
 	case cocos2d::Texture2D::PixelFormat::I8:
 		break;
 	case cocos2d::Texture2D::PixelFormat::AI88:
@@ -43,13 +43,13 @@ inline int PixelFormatBytes(cocos2d::Texture2D::PixelFormat p)
 	case cocos2d::Texture2D::PixelFormat::PVRTC2A:
 		break;
 	case cocos2d::Texture2D::PixelFormat::ETC:
-		break;
+		return 4;
 	case cocos2d::Texture2D::PixelFormat::S3TC_DXT1:
-		break;
+		return 4;
 	case cocos2d::Texture2D::PixelFormat::S3TC_DXT3:
-		return 1;
+		return 8;
 	case cocos2d::Texture2D::PixelFormat::S3TC_DXT5:
-		return 1;
+		return 8;
 	case cocos2d::Texture2D::PixelFormat::ATC_RGB:
 		break;
 	case cocos2d::Texture2D::PixelFormat::ATC_EXPLICIT_ALPHA:
@@ -66,9 +66,11 @@ inline int PixelFormatBytes(cocos2d::Texture2D::PixelFormat p)
 }
 
 //use 
-unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, NS_CC::Rect &outRect);
+unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, NS_CC::Rect &outRect, int &format);
 typedef unsigned char      uint8;
 bool PIX_DXT3_DXT3(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
+bool PIX_DXT1_DXT1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
+bool PIX_ETC1_ETC1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
 bool PIX_DXT3_RGB888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
 bool PIX_DXT3_RGBA8888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
 
@@ -80,15 +82,16 @@ const int TileAtlas::CacheTextureHeight = 1024;
 const char* TileAtlas::CMD_PURGE_TILEATLAS = "__cc_PURGE_TILEATLAS";
 const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
-const int TileAtlas::DEF_FORMAT = (int)(Texture2D::PixelFormat::S3TC_DXT3);//A8
+//const int TileAtlas::DEF_FORMAT = (int)(Texture2D::PixelFormat::S3TC_DXT3);//A8
 
-//绘制内存位图(格式转换): 
-void renderTileAt(uint8 *dest, int posX, int posY, uint8* bitmap, long bitmapWidth, long bitmapHeight)
+//绘制内存位图(格式转换):
+//dst_format: 目标格式,需要调整原图格式...
+void renderTileAt(int dst_format, uint8 *dest, int posX, int posY, uint8* bitmap, long bitmapWidth, long bitmapHeight)
 {
-	const int BYTES = PixelFormatBytes((Texture2D::PixelFormat)TileAtlas::DEF_FORMAT);
-	uint8 *pDst = dest + (posY * NS_CC::TileAtlas::CacheTextureWidth + posX)*BYTES;
-	int pitchs1 = NS_CC::TileAtlas::CacheTextureWidth*BYTES;
-	switch ((Texture2D::PixelFormat)TileAtlas::DEF_FORMAT)
+	const int bits = PixelFormatBits((Texture2D::PixelFormat)dst_format);
+	uint8 *pDst = dest + (posY * NS_CC::TileAtlas::CacheTextureWidth + posX) * bits / 8;
+	int pitchs1 = NS_CC::TileAtlas::CacheTextureWidth * bits / 8;
+	switch ((Texture2D::PixelFormat)dst_format)
 	{
 	case Texture2D::PixelFormat::RGB888:
 		PIX_DXT3_RGB888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
@@ -97,12 +100,26 @@ void renderTileAt(uint8 *dest, int posX, int posY, uint8* bitmap, long bitmapWid
 		PIX_DXT3_RGBA8888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
 		return;
 	case Texture2D::PixelFormat::S3TC_DXT3:
-		{
-			pitchs1 *= 4;
-			pDst = dest + (posY>>2)*pitchs1 + (posX * 4);
-			PIX_DXT3_DXT3(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
-			return;
-		}
+	{
+		pitchs1 *= 4;
+		pDst = dest + (posY>>2)*pitchs1 + (posX * 4);
+		PIX_DXT3_DXT3(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		return;
+	}
+	case Texture2D::PixelFormat::S3TC_DXT1:
+	{
+		pitchs1 *= 2;
+		pDst = dest + (posY >> 2)*pitchs1 + (posX * 2);
+		PIX_DXT1_DXT1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		return;
+	}
+	case Texture2D::PixelFormat::ETC:
+	{
+		pitchs1 *= 2;
+		pDst = dest + (posY >> 2)*pitchs1 + (posX * 2);
+		PIX_ETC1_ETC1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		return;
+	}
 	case Texture2D::PixelFormat::A8:
 		break;
 	default:
@@ -129,7 +146,7 @@ void renderTileAt(uint8 *dest, int posX, int posY, uint8* bitmap, long bitmapWid
 	}
 }
 
-TileAtlas::TileAtlas()
+TileAtlas::TileAtlas(int pix_format)
 	: _currentPageData(nullptr)
 	, _fontAscender(0)
 	, _rendererRecreatedListener(nullptr)
@@ -146,7 +163,7 @@ TileAtlas::TileAtlas()
 		_letterEdgeExtend = 0;
 		_letterPadding = 0;
 
-		pixelFormat = (int)DEF_FORMAT;	//ETC
+		pixelFormat = (int)pix_format;	//ETC
 
 		reinit();
 
@@ -166,7 +183,8 @@ void TileAtlas::reinit()
 		delete[]_currentPageData;
 		_currentPageData = nullptr;
 	}
-	_currentPageDataSize = CacheTextureWidth * CacheTextureHeight * PixelFormatBytes((Texture2D::PixelFormat)pixelFormat);
+	_currentPageDataSize = CacheTextureWidth * CacheTextureHeight * PixelFormatBits((Texture2D::PixelFormat)pixelFormat);
+	_currentPageDataSize = _currentPageDataSize / 8;
 	_currentPageData = new (std::nothrow) unsigned char[_currentPageDataSize];
 
 	assert(_currentPage == 0);
@@ -308,6 +326,16 @@ void TileAtlas::findNewCharacters(const TileString& u32Text, TileString &newChar
 	}
 }
 
+//
+bool matchFormat(int src, int dst)
+{
+	if (src == 4)//TPT_DXT1
+		return dst == (int)Texture2D::PixelFormat::S3TC_DXT1;
+	if (src == 5)//TPT_DXT1
+		return dst == (int)Texture2D::PixelFormat::S3TC_DXT3;
+	return false;
+}
+
 //muti tile prepare
 bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 {
@@ -329,13 +357,16 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 	auto scaleFactor = CC_CONTENT_SCALE_FACTOR();
 
 	float startY = _currentPageOrigY;
-
+	int pix_format = 0;
 	for (auto&& it : newChars)
 	{
 		//from TextureManager: TODO: 多帧如何处理？
-		unsigned char* bitmap = getTileBitmap(it.id, bitmapWidth, bitmapHeight, tempRect);
+		unsigned char* bitmap = getTileBitmap(it.id, bitmapWidth, bitmapHeight, tempRect, pix_format);
 		if (bitmap && bitmapWidth > 0 && bitmapHeight > 0)
 		{
+			//check format...
+			assert(matchFormat(pix_format, pixelFormat));
+
 			tempDef.validDefinition = true;
 			tempDef.width = tempRect.size.width + _letterPadding + _letterEdgeExtend;
 			tempDef.height = tempRect.size.height + _letterPadding + _letterEdgeExtend;
@@ -353,7 +384,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 					if (startY != 0)
 					{
 						assert(startY == 0);
-						data += CacheTextureWidth * (int)startY * PixelFormatBytes((Texture2D::PixelFormat)pixelFormat);
+						data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat)/8;
 					}
 					_atlasTextures[_currentPage]->updateWithData(data, 0, startY,
 						CacheTextureWidth, CacheTextureHeight - startY);
@@ -370,7 +401,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 				_currLineHeight = glyphHeight;
 			}
 
-			renderTileAt(_currentPageData, _currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight);
+			renderTileAt(pixelFormat,_currentPageData, _currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight);
 
 			tempDef.U = _currentPageOrigX;
 			tempDef.V = _currentPageOrigY;
@@ -384,7 +415,10 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 		}
 		else {
 			if (bitmap)
-				delete[] bitmap;
+			{
+				assert(false);
+				//delete[] bitmap;
+			}
 
 			tempDef.validDefinition = false;
 			tempDef.width = 0;
@@ -404,7 +438,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 	if (startY != 0)
 	{
 		assert(false);
-		data += CacheTextureWidth * (int)startY * PixelFormatBytes((Texture2D::PixelFormat)pixelFormat);
+		data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat)/8;
 	}
 	//partly update...
 	int height = _currentPageOrigY - startY + _currLineHeight;//CacheTextureHeight;//

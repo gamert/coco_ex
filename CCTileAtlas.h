@@ -40,6 +40,7 @@ typedef struct _tileConfig
 {
 	std::string tileFilePath;
 	float tileSize;
+	int  pixelFormat;
 	_tileConfig(float size = CC_DEFAULT_TILE_LABEL_SIZE) :tileSize(size)
 	{
 	}
@@ -59,14 +60,12 @@ typedef std::vector<TileChar> TileString;
 //typedef std::u32string TileString;	//
 typedef std::unordered_map<ssize_t, Texture2D*> TTexture2DMap;
 //ref : FontFreeType
-void renderTileAt(unsigned char *dest, int posX, int posY, unsigned char* bitmap, long bitmapWidth, long bitmapHeight);
+void renderTileAt(int dst_format, unsigned char *dest, int posX, int posY, unsigned char* bitmap, long bitmapWidth, long bitmapHeight);
 
 //TODO : use global buffer
 class TileAtlas : public Ref
 {
 public:
-	static const int DEF_FORMAT;
-
 	static const int CacheTextureWidth;
 	static const int CacheTextureHeight;
 	static const char* CMD_PURGE_TILEATLAS;
@@ -74,7 +73,7 @@ public:
 	/**
 	* @js ctor
 	*/
-	TileAtlas();
+	TileAtlas(int pix_format);
 	/**
 	* @js NA
 	* @lua NA
@@ -131,13 +130,13 @@ protected:
 	*/
 	void scaleFontLetterDefinition(float scaleFactor);
 
-	int  pixelFormat;//Texture2D::PixelFormat
-
 	TTexture2DMap _atlasTextures;
 	std::unordered_map<TileID, TileLetterDefinition> _letterDefinitions;
 	float _lineHeight;
 
 	// Dynamic GlyphCollection related stuff
+	int  pixelFormat;//Texture2D::PixelFormat
+
 	int _currentPage;
 	unsigned char *_currentPageData;
 	int _currentPageDataSize;
