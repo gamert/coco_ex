@@ -263,12 +263,18 @@ static Texture2D* _getTexture(TileSceneLayer* label)
 
 void TileSceneLayer::updateShaderProgram()
 {
-	setGLProgramState(GLProgramState::getOrCreateWithGLProgramName(GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR));
+	if (TileAtlas::DEF_FORMAT == (int)Texture2D::PixelFormat::A8)
+	{
+		setGLProgramState(GLProgramState::getOrCreateWithGLProgramName(GLProgram::SHADER_NAME_LABEL_NORMAL));
+	}
+	else
+	{
+		setGLProgramState(GLProgramState::getOrCreateWithGLProgramName(GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR));
+	}
 
 	GLProgram* glp = getGLProgram();
 	if(glp)
 		_uniformTextColor = glp->getUniformLocationForName("u_textColor");
-	//_uniformTextColor = glGetUniformLocation(getGLProgram()->getProgram(), );
 }
 
 void TileSceneLayer::setTileAtlas(TileAtlas* atlas, bool distanceFieldEnabled /* = false */, bool useA8Shader /* = false */)
@@ -387,6 +393,7 @@ void TileSceneLayer::updateLabelLetters()
 	}
 }
 
+//重排文本(Tile): 
 bool TileSceneLayer::alignText()
 {
 	if (_tileAtlas == nullptr || _utf32Text.empty())
@@ -395,8 +402,11 @@ bool TileSceneLayer::alignText()
 		return true;
 	}
 
+	Size winsize = Director::getInstance()->getWinSize();
+
 	bool ret = true;
 	do {
+
 		_tileAtlas->prepareLetterDefinitions(_utf32Text);
 		auto& textures = _tileAtlas->getTextures();
 		auto size = textures.size();
@@ -410,7 +420,8 @@ bool TileSceneLayer::alignText()
 					_isOpacityModifyRGB = batchNode->getTexture()->hasPremultipliedAlpha();
 					_blendFunc = batchNode->getBlendFunc();
 					batchNode->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-					batchNode->setPosition(Vec2::ZERO);
+					//sets the node in the center of screen
+					batchNode->setPosition(winsize.width / 2, winsize.height / 2);//Vec2::ZERO
 					_batchNodes.pushBack(batchNode);
 				}
 			}
@@ -428,10 +439,12 @@ bool TileSceneLayer::alignText()
 		_reusedLetter->setBatchNode(_batchNodes.at(0));
 		//_lengthOfString = 0;
 		getStringLength();
-		//如果是文字，那么通过格式化进行定位...
+		//...
+		float offx = winsize.width / 2;
+		float offy = winsize.height + winsize.height / 2;
 		for (int i = 0; i < (int)_utf32Text.size(); ++i)
 		{
-			Vec2 point(_utf32Text[i].x, _utf32Text[i].y);
+			Vec2 point(_utf32Text[i].x + offx, offy - _utf32Text[i].y);
 			recordLetterInfo(point, _utf32Text[i].id, i, 0);
 		}
 

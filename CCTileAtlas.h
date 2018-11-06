@@ -65,6 +65,8 @@ void renderTileAt(unsigned char *dest, int posX, int posY, unsigned char* bitmap
 class TileAtlas : public Ref
 {
 public:
+	static const int DEF_FORMAT;
+
 	static const int CacheTextureWidth;
 	static const int CacheTextureHeight;
 	static const char* CMD_PURGE_TILEATLAS;
