@@ -13,6 +13,9 @@
 #include "base/CCEventCustom.h"
 #include "base/ccUtils.h"
 
+//dx==>gl axis offset
+float c_offx = 0;// winsize.width / 2;
+float c_offy = 0;// winsize.height + winsize.height / 2;
 
 NS_CC_BEGIN
 
@@ -441,11 +444,9 @@ bool TileSceneLayer::alignText()
 		//_lengthOfString = 0;
 		getStringLength();
 		//...
-		float offx = winsize.width / 2;
-		float offy = winsize.height + winsize.height / 2;
 		for (int i = 0; i < (int)_utf32Text.size(); ++i)
 		{
-			Vec2 point(_utf32Text[i].x + offx, offy - _utf32Text[i].y);
+			Vec2 point(_utf32Text[i].x + c_offx, c_offy - _utf32Text[i].y);
 			recordLetterInfo(point, _utf32Text[i].id, i, 0);
 		}
 
@@ -551,8 +552,8 @@ bool TileSceneLayer::setTILEConfigInternal(const TILEConfig& ttfConfig)
 		reset();
 		return false;
 	}
-	setTileAtlas(newAtlas, false, true);
 	_tileConfig = ttfConfig;
+	setTileAtlas(newAtlas, false, true);
 	return true;
 }
 

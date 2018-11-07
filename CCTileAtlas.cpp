@@ -101,21 +101,21 @@ void renderTileAt(int dst_format, uint8 *dest, int posX, int posY, uint8* bitmap
 		return;
 	case Texture2D::PixelFormat::S3TC_DXT3:
 	{
-		pitchs1 *= 4;
+		pitchs1 = (NS_CC::TileAtlas::CacheTextureWidth >> 2) * 16;
 		pDst = dest + (posY>>2)*pitchs1 + (posX * 4);
 		PIX_DXT3_DXT3(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
 		return;
 	}
 	case Texture2D::PixelFormat::S3TC_DXT1:
 	{
-		pitchs1 *= 2;
+		pitchs1 = (NS_CC::TileAtlas::CacheTextureWidth >> 2) * 8;
 		pDst = dest + (posY >> 2)*pitchs1 + (posX * 2);
 		PIX_DXT1_DXT1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
 		return;
 	}
 	case Texture2D::PixelFormat::ETC:
 	{
-		pitchs1 *= 2;
+		pitchs1 = NS_CC::TileAtlas::CacheTextureWidth * 2;
 		pDst = dest + (posY >> 2)*pitchs1 + (posX * 2);
 		PIX_ETC1_ETC1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
 		return;
@@ -365,7 +365,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 		if (bitmap && bitmapWidth > 0 && bitmapHeight > 0)
 		{
 			//check format...
-			assert(matchFormat(pix_format, pixelFormat));
+			//assert(matchFormat(pix_format, pixelFormat));
 
 			tempDef.validDefinition = true;
 			tempDef.width = tempRect.size.width + _letterPadding + _letterEdgeExtend;
