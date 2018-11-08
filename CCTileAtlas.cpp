@@ -383,7 +383,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 					unsigned char *data = _currentPageData;
 					if (startY != 0)
 					{
-						assert(startY == 0);
+						//assert(startY == 0);
 						data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat)/8;
 					}
 					_atlasTextures[_currentPage]->updateWithData(data, 0, startY,
@@ -433,15 +433,17 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 		_letterDefinitions[it.id] = tempDef;
 	}
 
+	//partly update...
+	int height = _currentPageOrigY - startY + _currLineHeight;//CacheTextureHeight;//
 	//
 	unsigned char *data = _currentPageData;
 	if (startY != 0)
 	{
-		assert(false);
+		//assert(false);
 		data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat)/8;
+
+		assert(startY + height <= CacheTextureHeight);
 	}
-	//partly update...
-	int height = _currentPageOrigY - startY + _currLineHeight;//CacheTextureHeight;//
 	_atlasTextures[_currentPage]->updateWithData(data, 0, startY, CacheTextureWidth, height);
 	return true;
 }
