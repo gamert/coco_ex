@@ -214,14 +214,14 @@ Texture2D *TileAtlas::addOnePage()
 
 TileAtlas::~TileAtlas()
 {
-#if CC_ENABLE_CACHE_TEXTURE_DATA
-	if (_fontFreeType && _rendererRecreatedListener)
-	{
-		auto eventDispatcher = Director::getInstance()->getEventDispatcher();
-		eventDispatcher->removeEventListener(_rendererRecreatedListener);
-		_rendererRecreatedListener = nullptr;
-	}
-#endif
+//#if CC_ENABLE_CACHE_TEXTURE_DATA
+//	if (_fontFreeType && _rendererRecreatedListener)
+//	{
+//		auto eventDispatcher = Director::getInstance()->getEventDispatcher();
+//		eventDispatcher->removeEventListener(_rendererRecreatedListener);
+//		_rendererRecreatedListener = nullptr;
+//	}
+//#endif
 
 	releaseTextures();
 

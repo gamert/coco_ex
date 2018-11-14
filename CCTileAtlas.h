@@ -5,7 +5,8 @@
 #include "platform/CCPlatformMacros.h"
 #include "base/CCRef.h"
 #include "platform/CCStdC.h" // ssize_t on windows
-//#include <string>
+#include <string>
+#include <vector>
 #include <unordered_map>
 
 NS_CC_BEGIN

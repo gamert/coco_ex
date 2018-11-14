@@ -251,18 +251,18 @@ void TileSceneLayer::reset()
 }
 
 //  ETC1 ALPHA supports, for LabelType::BMTILE & LabelType::CHARMAP
-static Texture2D* _getTexture(TileSceneLayer* label)
-{
-	auto tileAtlas = label->getTileAtlas();
-	Texture2D* texture = nullptr;
-	if (tileAtlas != nullptr) {
-		auto textures = tileAtlas->getTextures();
-		if (!textures.empty()) {
-			texture = textures.begin()->second;
-		}
-	}
-	return texture;
-}
+//static Texture2D* _getTexture(TileSceneLayer* label)
+//{
+//	auto tileAtlas = label->getTileAtlas();
+//	Texture2D* texture = nullptr;
+//	if (tileAtlas != nullptr) {
+//		auto textures = tileAtlas->getTextures();
+//		if (!textures.empty()) {
+//			texture = textures.begin()->second;
+//		}
+//	}
+//	return texture;
+//}
 
 void TileSceneLayer::updateShaderProgram()
 {
