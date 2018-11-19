@@ -139,6 +139,18 @@ public:
 	void draw(Renderer* /*renderer*/, const Mat4 & /*transform*/, uint32_t /*flags*/) override
 	{
 	}
+	/** @overload
+	*
+	*  The Texture's rect is not changed.
+	*/
+	virtual void setTexture(Texture2D *texture) override
+	{
+		return Sprite::setTexture(texture);
+	}
+	virtual Texture2D* getTexture() const override
+	{
+		return Sprite::getTexture();
+	}
 
 private:
 	bool _letterVisible;
@@ -176,6 +188,7 @@ TileSceneLayer::TileSceneLayer()
 			{
 				it.second->setTexture(nullptr);
 			}
+
 			_batchNodes.clear();
 
 			if (_tileAtlas)
