@@ -61,8 +61,6 @@ typedef std::vector<TileChar> TileString;
 //typedef std::u32string TileString;	//
 typedef std::unordered_map<ssize_t, Texture2D*> TTexture2DMap;
 //ref : FontFreeType
-void renderTileAt(int dst_format, unsigned char *dest, int posX, int posY, unsigned char* bitmap, long bitmapWidth, long bitmapHeight);
-
 //TODO : use global buffer
 class TileAtlas : public Ref
 {

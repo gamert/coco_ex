@@ -9,75 +9,8 @@
 #include "base/CCEventListenerCustom.h"
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventType.h"
+#include "../DeviceFormat2cocos.h"
 
-inline int PixelFormatBits(cocos2d::Texture2D::PixelFormat p)
-{
-	switch (p)
-	{
-	case cocos2d::Texture2D::PixelFormat::AUTO:
-		break;
-	case cocos2d::Texture2D::PixelFormat::BGRA8888:
-		return 4 * 8;
-	case cocos2d::Texture2D::PixelFormat::RGBA8888:
-		return 4 * 8;
-	case cocos2d::Texture2D::PixelFormat::RGB888:
-		return 3 * 8;
-	case cocos2d::Texture2D::PixelFormat::RGB565:
-		return 2 * 8;
-	case cocos2d::Texture2D::PixelFormat::A8:
-		return 8;
-	case cocos2d::Texture2D::PixelFormat::I8:
-		break;
-	case cocos2d::Texture2D::PixelFormat::AI88:
-		break;
-	case cocos2d::Texture2D::PixelFormat::RGBA4444:
-		break;
-	case cocos2d::Texture2D::PixelFormat::RGB5A1:
-		break;
-	case cocos2d::Texture2D::PixelFormat::PVRTC4:
-		break;
-	case cocos2d::Texture2D::PixelFormat::PVRTC4A:
-		break;
-	case cocos2d::Texture2D::PixelFormat::PVRTC2:
-		break;
-	case cocos2d::Texture2D::PixelFormat::PVRTC2A:
-		break;
-	case cocos2d::Texture2D::PixelFormat::ETC:
-		return 4;
-	case cocos2d::Texture2D::PixelFormat::S3TC_DXT1:
-		return 4;
-	case cocos2d::Texture2D::PixelFormat::S3TC_DXT3:
-		return 8;
-	case cocos2d::Texture2D::PixelFormat::S3TC_DXT5:
-		return 8;
-	case cocos2d::Texture2D::PixelFormat::ATC_RGB:
-		break;
-	case cocos2d::Texture2D::PixelFormat::ATC_EXPLICIT_ALPHA:
-		break;
-	case cocos2d::Texture2D::PixelFormat::ATC_INTERPOLATED_ALPHA:
-		break;
-	case cocos2d::Texture2D::PixelFormat::NONE:
-		break;
-	default:
-		break;
-	}
-	assert(false);
-	return 0;
-}
-
-//use 
-unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, NS_CC::Rect &outRect, int &format);
-typedef unsigned char      uint8;
-bool PIX_DXT3_DXT3(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-bool PIX_DXT3_RGB888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-bool PIX_DXT3_RGBA8888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-
-bool PIX_DXT1_DXT1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-bool PIX_DXT1_RGBA8888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-bool PIX_DXT1_RGB888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-
-bool PIX_ETC1_ETC1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-bool PIX_DXT1_ETC1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
 
 NS_CC_BEGIN
 
@@ -89,89 +22,7 @@ const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
 //const int TileAtlas::DEF_FORMAT = (int)(Texture2D::PixelFormat::S3TC_DXT3);//A8
 
-//绘制内存位图(格式转换):
-//dst_format: 目标格式,需要调整原图格式...
-void renderTileAt(int dst_format, uint8 *dest, int posX, int posY, uint8* bitmap, long bitmapWidth, long bitmapHeight, int src_format)
-{
-	const int bits = PixelFormatBits((Texture2D::PixelFormat)dst_format);
-	uint8 *pDst = dest + (posY * NS_CC::TileAtlas::CacheTextureWidth + posX) * bits / 8;
-	int pitchs1 = NS_CC::TileAtlas::CacheTextureWidth * bits / 8;
-	switch ((Texture2D::PixelFormat)dst_format)
-	{
-	case Texture2D::PixelFormat::RGB888:
-		if (src_format == 4) 
-		{
-			PIX_DXT1_RGB888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap,bitmapWidth, bitmapHeight);
-		}
-		else
-		{
-			PIX_DXT3_RGB888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
-		}
-		return;
-	case Texture2D::PixelFormat::RGBA8888:
-		if (src_format == 4)
-		{
-			//TPT_DXT1
-			PIX_DXT1_RGBA8888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
-		}
-		else
-		{
-			PIX_DXT3_RGBA8888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
-		}
-		return;
-	case Texture2D::PixelFormat::S3TC_DXT3:
-	{
-		pitchs1 = (NS_CC::TileAtlas::CacheTextureWidth >> 2) * 16;
-		pDst = dest + (posY>>2)*pitchs1 + (posX * 4);
-		PIX_DXT3_DXT3(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
-		return;
-	}
-	case Texture2D::PixelFormat::S3TC_DXT1:
-	{
-		pitchs1 = (NS_CC::TileAtlas::CacheTextureWidth >> 2) * 8;
-		pDst = dest + (posY >> 2)*pitchs1 + (posX * 2);
-		PIX_DXT1_DXT1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
-		return;
-	}
-	case Texture2D::PixelFormat::ETC:
-	{
-        if (src_format == 4) {
-            pitchs1 = (NS_CC::TileAtlas::CacheTextureWidth >> 2) * 8;
-            pDst = dest + (posY >> 2) * pitchs1 + (posX * 2);
-            PIX_DXT1_ETC1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap,
-                          bitmapWidth, bitmapHeight);
-            return ;
-        } else
-        {
 
-        }
-        break;
-	}
-	case Texture2D::PixelFormat::A8:
-		break;
-	default:
-		assert(false);
-	}
-	
-
-	int iX = posX;
-	int iY = posY;
-	{
-		for (long y = 0; y < bitmapHeight; ++y)
-		{
-			long bitmap_y = y * bitmapWidth;
-			for (int x = 0; x < bitmapWidth; ++x)
-			{
-				unsigned char cTemp = bitmap[bitmap_y + x];
-				// the final pixel
-				dest[(iX + (iY * NS_CC::TileAtlas::CacheTextureWidth))] = 0xFF;
-				iX += 1;
-			}
-			iX = posX;
-			iY += 1;
-		}
-	}
-}
 
 TileAtlas::TileAtlas(int pix_format)
 	: _currentPageData(nullptr)
@@ -375,8 +226,8 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 
 	int adjustForDistanceMap = _letterPadding / 2;
 	int adjustForExtend = _letterEdgeExtend / 2;
-	long bitmapWidth;
-	long bitmapHeight;
+	int bitmapWidth;
+	int bitmapHeight;
 	int glyphHeight;
 	Rect tempRect;
 	TileLetterDefinition tempDef;
@@ -427,8 +278,9 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 			{
 				_currLineHeight = glyphHeight;
 			}
-
-			renderTileAt(pixelFormat,_currentPageData, _currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight, pix_format);
+			//
+			PixWriter_t pw(pixelFormat,_currentPageData, NS_CC::TileAtlas::CacheTextureWidth, NS_CC::TileAtlas::CacheTextureHeight);
+			pw.renderTileAt(_currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight, pix_format);
 
 			tempDef.U = _currentPageOrigX;
 			tempDef.V = _currentPageOrigY;
