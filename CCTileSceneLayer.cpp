@@ -971,7 +971,7 @@ void TileSceneLayer::updateLetterSpriteScale(Sprite* sprite)
 	//}
 	//else
 	{
-		sprite->setScale(1.0);
+		sprite->setScale(CC_CONTENT_SCALE_FACTOR());//
 	}
 }
 

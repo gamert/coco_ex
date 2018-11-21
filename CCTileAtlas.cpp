@@ -69,10 +69,15 @@ inline int PixelFormatBits(cocos2d::Texture2D::PixelFormat p)
 unsigned char* getTileBitmap(uint64_t theChar, long &outWidth, long &outHeight, NS_CC::Rect &outRect, int &format);
 typedef unsigned char      uint8;
 bool PIX_DXT3_DXT3(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-bool PIX_DXT1_DXT1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
-bool PIX_ETC1_ETC1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
 bool PIX_DXT3_RGB888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
 bool PIX_DXT3_RGBA8888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
+
+bool PIX_DXT1_DXT1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
+bool PIX_DXT1_RGBA8888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
+bool PIX_DXT1_RGB888(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
+
+bool PIX_ETC1_ETC1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
+bool PIX_DXT1_ETC1(uint8 *pDst, int pitchs1, int h1, uint8 *pSrc, int w0, int h0);
 
 NS_CC_BEGIN
 
@@ -86,7 +91,7 @@ const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
 //绘制内存位图(格式转换):
 //dst_format: 目标格式,需要调整原图格式...
-void renderTileAt(int dst_format, uint8 *dest, int posX, int posY, uint8* bitmap, long bitmapWidth, long bitmapHeight)
+void renderTileAt(int dst_format, uint8 *dest, int posX, int posY, uint8* bitmap, long bitmapWidth, long bitmapHeight, int src_format)
 {
 	const int bits = PixelFormatBits((Texture2D::PixelFormat)dst_format);
 	uint8 *pDst = dest + (posY * NS_CC::TileAtlas::CacheTextureWidth + posX) * bits / 8;
@@ -94,10 +99,25 @@ void renderTileAt(int dst_format, uint8 *dest, int posX, int posY, uint8* bitmap
 	switch ((Texture2D::PixelFormat)dst_format)
 	{
 	case Texture2D::PixelFormat::RGB888:
-		PIX_DXT3_RGB888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		if (src_format == 4) 
+		{
+			PIX_DXT1_RGB888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap,bitmapWidth, bitmapHeight);
+		}
+		else
+		{
+			PIX_DXT3_RGB888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		}
 		return;
 	case Texture2D::PixelFormat::RGBA8888:
-		PIX_DXT3_RGBA8888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		if (src_format == 4)
+		{
+			//TPT_DXT1
+			PIX_DXT1_RGBA8888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		}
+		else
+		{
+			PIX_DXT3_RGBA8888(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
+		}
 		return;
 	case Texture2D::PixelFormat::S3TC_DXT3:
 	{
@@ -115,10 +135,17 @@ void renderTileAt(int dst_format, uint8 *dest, int posX, int posY, uint8* bitmap
 	}
 	case Texture2D::PixelFormat::ETC:
 	{
-		pitchs1 = NS_CC::TileAtlas::CacheTextureWidth * 2;
-		pDst = dest + (posY >> 2)*pitchs1 + (posX * 2);
-		PIX_ETC1_ETC1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap, bitmapWidth, bitmapHeight);
-		return;
+        if (src_format == 4) {
+            pitchs1 = (NS_CC::TileAtlas::CacheTextureWidth >> 2) * 8;
+            pDst = dest + (posY >> 2) * pitchs1 + (posX * 2);
+            PIX_DXT1_ETC1(pDst, pitchs1, NS_CC::TileAtlas::CacheTextureHeight - posY, bitmap,
+                          bitmapWidth, bitmapHeight);
+            return ;
+        } else
+        {
+
+        }
+        break;
 	}
 	case Texture2D::PixelFormat::A8:
 		break;
@@ -354,7 +381,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 	Rect tempRect;
 	TileLetterDefinition tempDef;
 
-	auto scaleFactor = CC_CONTENT_SCALE_FACTOR();
+	auto scaleFactor =  CC_CONTENT_SCALE_FACTOR();
 
 	float startY = _currentPageOrigY;
 	int pix_format = 0;
@@ -401,7 +428,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 				_currLineHeight = glyphHeight;
 			}
 
-			renderTileAt(pixelFormat,_currentPageData, _currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight);
+			renderTileAt(pixelFormat,_currentPageData, _currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight, pix_format);
 
 			tempDef.U = _currentPageOrigX;
 			tempDef.V = _currentPageOrigY;
