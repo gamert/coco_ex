@@ -28,6 +28,10 @@ struct TileLetterDefinition
 	UAxis offsetY;
 	int textureID;
 	bool validDefinition;
+
+	TileLetterDefinition *pNext;
+
+	static TileLetterDefinition *New();
 };
 
 /**
@@ -79,7 +83,7 @@ public:
 	*/
 	virtual ~TileAtlas();
 
-	void addLetterDefinition(TileID utf32Char, const TileLetterDefinition &letterDefinition);
+	//void addLetterDefinition(TileID utf32Char, const TileLetterDefinition &letterDefinition);
 	bool getLetterDefinitionForChar(TileID utf32Char, TileLetterDefinition &letterDefinition);
 
 	bool prepareLetterDefinitions(const TileString& utf16String);
@@ -130,7 +134,7 @@ protected:
 	void scaleFontLetterDefinition(float scaleFactor);
 
 	TTexture2DMap _atlasTextures;
-	std::unordered_map<TileID, TileLetterDefinition> _letterDefinitions;
+	std::unordered_map<TileID, TileLetterDefinition*> _letterDefinitions;
 	float _lineHeight;
 
 	// Dynamic GlyphCollection related stuff

@@ -14,6 +14,13 @@
 
 NS_CC_BEGIN
 
+TileLetterDefinition *TileLetterDefinition::New()
+{
+	TileLetterDefinition *p = new TileLetterDefinition();
+	memset(p,0,sizeof(TileLetterDefinition));
+	return p;
+}
+
 //TODO: 测试大小是否有效降低mem dc等...
 const int TileAtlas::CacheTextureWidth = 1024 * 2;
 const int TileAtlas::CacheTextureHeight = 1024*2;
@@ -151,19 +158,19 @@ void TileAtlas::listenRendererRecreated(EventCustom * /*event*/)
 	purgeTexturesAtlas();
 }
 
-void TileAtlas::addLetterDefinition(TileID utf32Char, const TileLetterDefinition &letterDefinition)
-{
-	_letterDefinitions[utf32Char] = letterDefinition;
-}
+//void TileAtlas::addLetterDefinition(TileID utf32Char, const TileLetterDefinition &letterDefinition)
+//{
+//	_letterDefinitions[utf32Char] = letterDefinition;
+//}
 
 void TileAtlas::scaleFontLetterDefinition(float scaleFactor)
 {
 	for (auto&& fontDefinition : _letterDefinitions) {
 		auto& letterDefinition = fontDefinition.second;
-		letterDefinition.width *= scaleFactor;
-		letterDefinition.height *= scaleFactor;
-		letterDefinition.offsetX *= scaleFactor;
-		letterDefinition.offsetY *= scaleFactor;
+		letterDefinition->width *= scaleFactor;
+		letterDefinition->height *= scaleFactor;
+		letterDefinition->offsetX *= scaleFactor;
+		letterDefinition->offsetY *= scaleFactor;
 	}
 }
 
@@ -173,7 +180,7 @@ bool TileAtlas::getLetterDefinitionForChar(TileID utf32Char, TileLetterDefinitio
 
 	if (outIterator != _letterDefinitions.end())
 	{
-		letterDefinition = (*outIterator).second;
+		letterDefinition = *(outIterator->second);
 		return letterDefinition.validDefinition;
 	}
 	else
@@ -229,91 +236,118 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 	int bitmapWidth;
 	int bitmapHeight;
 	int glyphHeight;
-	Rect tempRect;
-	TileLetterDefinition tempDef;
+	//Rect tempRect;
 
 	auto scaleFactor =  CC_CONTENT_SCALE_FACTOR();
 
+	TileLetterDefinition *preDef;// = NULL;
 	float startY = _currentPageOrigY;
 	int pix_format = 0;
+	const int MAX_TBS = 64;
+	TileBitmaps_t tbs[MAX_TBS];
 	for (auto&& it : newChars)
 	{
-		//from TextureManager: TODO: 多帧如何处理？
-		unsigned char* bitmap = getTileBitmap(it.id, bitmapWidth, bitmapHeight, tempRect, pix_format);
-		if (bitmap && bitmapWidth > 0 && bitmapHeight > 0)
+		//from TextureManager: 1. 多帧
+		int count = getTileBitmaps(it.id, tbs, MAX_TBS);
+		//unsigned char* bitmap = getTileBitmap(it.id, bitmapWidth, bitmapHeight, tempRect, pix_format);
+		for (int k = 0; k < count; k++)
 		{
-			//check format...
-			//assert(matchFormat(pix_format, pixelFormat));
+			TileLetterDefinition *tempDef = TileLetterDefinition::New();
 
-			tempDef.validDefinition = true;
-			tempDef.width = tempRect.size.width + _letterPadding + _letterEdgeExtend;
-			tempDef.height = tempRect.size.height + _letterPadding + _letterEdgeExtend;
-			tempDef.offsetX = tempRect.origin.x - adjustForDistanceMap - adjustForExtend;
-			tempDef.offsetY = _fontAscender + tempRect.origin.y - adjustForDistanceMap - adjustForExtend;
+			unsigned char* bitmap = tbs[k].pData;
+			bitmapWidth = tbs[k].outWidth;
+			bitmapHeight= tbs[k].outHeight;
+			pix_format = tbs[k].format;
+			Rect &tempRect = tbs[k].outRect;
+			if (bitmap && bitmapWidth > 0 && bitmapHeight > 0)
+			{
+				//check format...
+				//assert(matchFormat(pix_format, pixelFormat));
 
-			//行宽超出？
-			if (_currentPageOrigX + tempDef.width > CacheTextureWidth)
-			{
-				_currentPageOrigY += _currLineHeight;
-				_currLineHeight = 0;
-				_currentPageOrigX = 0;
-			}
-			//行高超出？
-			if (_currentPageOrigY + bitmapHeight + _letterPadding + _letterEdgeExtend >= CacheTextureHeight)
-			{
-				unsigned char *data = _currentPageData;
-				if (startY != 0)
+				tempDef->validDefinition = true;
+				tempDef->width = tempRect.size.width + _letterPadding + _letterEdgeExtend;
+				tempDef->height = tempRect.size.height + _letterPadding + _letterEdgeExtend;
+				tempDef->offsetX = tempRect.origin.x - adjustForDistanceMap - adjustForExtend;
+				tempDef->offsetY = _fontAscender + tempRect.origin.y - adjustForDistanceMap - adjustForExtend;
+
+				//行宽超出？
+				if (_currentPageOrigX + tempDef->width > CacheTextureWidth)
 				{
-					//assert(startY == 0);
-					data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat) / 8;
+					_currentPageOrigY += _currLineHeight;
+					_currLineHeight = 0;
+					_currentPageOrigX = 0;
 				}
-				_atlasTextures[_currentPage]->updateWithData(data, 0, startY,
-					CacheTextureWidth, CacheTextureHeight - startY);
-				startY = 0.0f;
-				_currentPageOrigY = 0;
-				_currentPage++;
+				//行高超出？
+				if (_currentPageOrigY + bitmapHeight + _letterPadding + _letterEdgeExtend >= CacheTextureHeight)
+				{
+					unsigned char *data = _currentPageData;
+					if (startY != 0)
+					{
+						//assert(startY == 0);
+						data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat) / 8;
+					}
+					_atlasTextures[_currentPage]->updateWithData(data, 0, startY,
+						CacheTextureWidth, CacheTextureHeight - startY);
+					startY = 0.0f;
+					_currentPageOrigY = 0;
+					_currentPage++;
 
-				addOnePage();
+					addOnePage();
+				}
+
+				glyphHeight = static_cast<int>(bitmapHeight) + _letterPadding + _letterEdgeExtend;
+				if (glyphHeight > _currLineHeight)
+				{
+					_currLineHeight = glyphHeight;
+				}
+				//
+				PixWriter_t pw(pixelFormat, _currentPageData, NS_CC::TileAtlas::CacheTextureWidth, NS_CC::TileAtlas::CacheTextureHeight);
+				pw.renderTileAt(_currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight, pix_format);
+
+				tempDef->U = _currentPageOrigX;
+				tempDef->V = _currentPageOrigY;
+				tempDef->textureID = _currentPage;
+				_currentPageOrigX += tempDef->width;// + 1
+				// take from pixels to points
+				tempDef->width = tempDef->width / scaleFactor;
+				tempDef->height = tempDef->height / scaleFactor;
+				tempDef->U = tempDef->U / scaleFactor;
+				tempDef->V = tempDef->V / scaleFactor;
 			}
+			else {
+				if (bitmap)
+				{
+					assert(false);
+					//delete[] bitmap;
+				}
 
-			glyphHeight = static_cast<int>(bitmapHeight) + _letterPadding + _letterEdgeExtend;
-			if (glyphHeight > _currLineHeight)
+				tempDef->validDefinition = false;
+				tempDef->width = 0;
+				tempDef->height = 0;
+				tempDef->U = 0;
+				tempDef->V = 0;
+				tempDef->offsetX = 0;
+				tempDef->offsetY = 0;
+				tempDef->textureID = 0;
+				_currentPageOrigX += 1;
+			}
+			//Register or Link Def
+			if (k == 0)
 			{
-				_currLineHeight = glyphHeight;
+				_letterDefinitions[it.id] = tempDef;
 			}
-			//
-			PixWriter_t pw(pixelFormat,_currentPageData, NS_CC::TileAtlas::CacheTextureWidth, NS_CC::TileAtlas::CacheTextureHeight);
-			pw.renderTileAt(_currentPageOrigX + adjustForExtend, _currentPageOrigY + adjustForExtend, bitmap, bitmapWidth, bitmapHeight, pix_format);
-
-			tempDef.U = _currentPageOrigX;
-			tempDef.V = _currentPageOrigY;
-			tempDef.textureID = _currentPage;
-			_currentPageOrigX += tempDef.width;// + 1
-			// take from pixels to points
-			tempDef.width = tempDef.width / scaleFactor;
-			tempDef.height = tempDef.height / scaleFactor;
-			tempDef.U = tempDef.U / scaleFactor;
-			tempDef.V = tempDef.V / scaleFactor;
-		}
-		else {
-			if (bitmap)
+			else
 			{
-				assert(false);
-				//delete[] bitmap;
+				preDef->pNext = tempDef;
 			}
-
-			tempDef.validDefinition = false;
-			tempDef.width = 0;
-			tempDef.height = 0;
-			tempDef.U = 0;
-			tempDef.V = 0;
-			tempDef.offsetX = 0;
-			tempDef.offsetY = 0;
-			tempDef.textureID = 0;
-			_currentPageOrigX += 1;
-		}
-		_letterDefinitions[it.id] = tempDef;
-	}
+			preDef = tempDef;
+			if (tempDef->validDefinition == false)
+			{
+				Assert(false);
+				break;
+			}
+		}//end count
+	}//end chars
 
 	//partly update...
 	int height = _currentPageOrigY - startY + _currLineHeight;//CacheTextureHeight;//

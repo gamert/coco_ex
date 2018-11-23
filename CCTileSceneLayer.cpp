@@ -377,27 +377,27 @@ void TileSceneLayer::updateLabelLetters()
 			if (letterInfo.valid)
 			{
 				auto& letterDef = _tileAtlas->_letterDefinitions[letterInfo.utf32Char];
-				uvRect.size.height = letterDef.height;
-				uvRect.size.width = letterDef.width;
-				uvRect.origin.x = letterDef.U;
-				uvRect.origin.y = letterDef.V;
+				uvRect.size.height = letterDef->height;
+				uvRect.size.width = letterDef->width;
+				uvRect.origin.x = letterDef->U;
+				uvRect.origin.y = letterDef->V;
 
-				auto batchNode = _batchNodes.at(letterDef.textureID);
+				auto batchNode = _batchNodes.at(letterDef->textureID);
 				letterSprite->setTextureAtlas(batchNode->getTextureAtlas());
-				letterSprite->setTexture(_tileAtlas->getTexture(letterDef.textureID));
-				if (letterDef.width <= 0.f || letterDef.height <= 0.f)
+				letterSprite->setTexture(_tileAtlas->getTexture(letterDef->textureID));
+				if (letterDef->width <= 0.f || letterDef->height <= 0.f)
 				{
 					letterSprite->setTextureAtlas(nullptr);
 				}
 				else
 				{
 					letterSprite->setTextureRect(uvRect, false, uvRect.size);
-					letterSprite->setTextureAtlas(_batchNodes.at(letterDef.textureID)->getTextureAtlas());
+					letterSprite->setTextureAtlas(_batchNodes.at(letterDef->textureID)->getTextureAtlas());
 					letterSprite->setAtlasIndex(_lettersInfo[letterIndex].atlasIndex);
 				}
 
-				auto px = letterInfo.positionX + letterDef.width / 2;// +_linesOffsetX[letterInfo.lineIndex];
-				auto py = letterInfo.positionY - letterDef.height / 2;// +_letterOffsetY;
+				auto px = letterInfo.positionX + letterDef->width / 2;// +_linesOffsetX[letterInfo.lineIndex];
+				auto py = letterInfo.positionY - letterDef->height / 2;// +_letterOffsetY;
 				letterSprite->setPosition(px, py);
 			}
 			else
@@ -488,66 +488,69 @@ bool TileSceneLayer::updateQuads()
 		if (_lettersInfo[ctr].valid)
 		{
 			//z: get from atlas
-			auto& letterDef = _tileAtlas->_letterDefinitions[_lettersInfo[ctr].utf32Char];
+			TileLetterDefinition* letterDef = _tileAtlas->_letterDefinitions[_lettersInfo[ctr].utf32Char];
 
-			_reusedRect.size.height = letterDef.height;
-			_reusedRect.size.width = letterDef.width;
-			_reusedRect.origin.x = letterDef.U;
-			_reusedRect.origin.y = letterDef.V;
-
-			//暂时不支持裁切..
-			//FIX&&TODO: check (-letterDef.offsetY)
-			auto py = _lettersInfo[ctr].positionY - letterDef.offsetY;//+ _letterOffsetY
-			//
-			//if (_labelHeight > 0.f) {
-			//	if (py > _tailoredTopY)
-			//	{
-			//		auto clipTop = py - _tailoredTopY;
-			//		_reusedRect.origin.y += clipTop;
-			//		_reusedRect.size.height -= clipTop;
-			//		py -= clipTop;
-			//	}
-			//	if (py - letterDef.height * _bmtileScale < _tailoredBottomY)
-			//	{
-			//		_reusedRect.size.height = (py < _tailoredBottomY) ? 0.f : (py - _tailoredBottomY);
-			//	}
-			//}
-
-			//auto lineIndex = _lettersInfo[ctr].lineIndex;
-			//auto px = _lettersInfo[ctr].positionX + letterDef.width / 2 * _bmtileScale + _linesOffsetX[lineIndex];
-
-			////窗口的宽度？
-			//if (_labelWidth > 0.f) {
-			//	if (this->isHorizontalClamped(px, lineIndex)) {
-			//		if (_overflow == Overflow::CLAMP) {
-			//			_reusedRect.size.width = 0;
-			//		}
-			//		else if (_overflow == Overflow::SHRINK) {
-			//			if (_contentSize.width > letterDef.width) {
-			//				ret = false;
-			//				break;
-			//			}
-			//			else {
-			//				_reusedRect.size.width = 0;
-			//			}
-
-			//		}
-			//	}
-			//}
-
-
-			if (_reusedRect.size.height > 0.f && _reusedRect.size.width > 0.f)
+			for (;letterDef != NULL;letterDef = letterDef->pNext)
 			{
-				_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
-				//fix: 原始图有位置偏移 
-				float letterPositionX = _lettersInfo[ctr].positionX + letterDef.offsetX;// +_linesOffsetX[_lettersInfo[ctr].lineIndex];
-				_reusedLetter->setPosition(letterPositionX, py);
-				auto index = static_cast<int>(_batchNodes.at(letterDef.textureID)->getTextureAtlas()->getTotalQuads());
-				_lettersInfo[ctr].atlasIndex = index;
+				_reusedRect.size.height = letterDef->height;
+				_reusedRect.size.width = letterDef->width;
+				_reusedRect.origin.x = letterDef->U;
+				_reusedRect.origin.y = letterDef->V;
 
-				this->updateLetterSpriteScale(_reusedLetter);
+				//暂时不支持裁切..
+				//FIX&&TODO: check (-letterDef->offsetY)
+				auto py = _lettersInfo[ctr].positionY - letterDef->offsetY;//+ _letterOffsetY
+				//
+				//if (_labelHeight > 0.f) {
+				//	if (py > _tailoredTopY)
+				//	{
+				//		auto clipTop = py - _tailoredTopY;
+				//		_reusedRect.origin.y += clipTop;
+				//		_reusedRect.size.height -= clipTop;
+				//		py -= clipTop;
+				//	}
+				//	if (py - letterDef->height * _bmtileScale < _tailoredBottomY)
+				//	{
+				//		_reusedRect.size.height = (py < _tailoredBottomY) ? 0.f : (py - _tailoredBottomY);
+				//	}
+				//}
 
-				_batchNodes.at(letterDef.textureID)->insertQuadFromSprite(_reusedLetter, index);
+				//auto lineIndex = _lettersInfo[ctr].lineIndex;
+				//auto px = _lettersInfo[ctr].positionX + letterDef->width / 2 * _bmtileScale + _linesOffsetX[lineIndex];
+
+				////窗口的宽度？
+				//if (_labelWidth > 0.f) {
+				//	if (this->isHorizontalClamped(px, lineIndex)) {
+				//		if (_overflow == Overflow::CLAMP) {
+				//			_reusedRect.size.width = 0;
+				//		}
+				//		else if (_overflow == Overflow::SHRINK) {
+				//			if (_contentSize.width > letterDef->width) {
+				//				ret = false;
+				//				break;
+				//			}
+				//			else {
+				//				_reusedRect.size.width = 0;
+				//			}
+
+				//		}
+				//	}
+				//}
+
+
+				if (_reusedRect.size.height > 0.f && _reusedRect.size.width > 0.f)
+				{
+					_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
+					//fix: 原始图有位置偏移 
+					float letterPositionX = _lettersInfo[ctr].positionX + letterDef->offsetX;// +_linesOffsetX[_lettersInfo[ctr].lineIndex];
+					_reusedLetter->setPosition(letterPositionX, py);
+					auto index = static_cast<int>(_batchNodes.at(letterDef->textureID)->getTextureAtlas()->getTotalQuads());
+					_lettersInfo[ctr].atlasIndex = index;
+
+					this->updateLetterSpriteScale(_reusedLetter);
+
+					_batchNodes.at(letterDef->textureID)->insertQuadFromSprite(_reusedLetter, index);
+				}
 			}
 		}
 	}
@@ -761,15 +764,15 @@ Sprite* TileSceneLayer::getLetter(int letterIndex)
 
 			if (letter == nullptr)
 			{
-				auto& letterDef = _tileAtlas->_letterDefinitions[letterInfo.utf32Char];
-				auto textureID = letterDef.textureID;
+				auto &letterDef = _tileAtlas->_letterDefinitions[letterInfo.utf32Char];
+				auto textureID = letterDef->textureID;
 				Rect uvRect;
-				uvRect.size.height = letterDef.height;
-				uvRect.size.width = letterDef.width;
-				uvRect.origin.x = letterDef.U;
-				uvRect.origin.y = letterDef.V;
+				uvRect.size.height = letterDef->height;
+				uvRect.size.width = letterDef->width;
+				uvRect.origin.x = letterDef->U;
+				uvRect.origin.y = letterDef->V;
 
-				if (letterDef.width <= 0.f || letterDef.height <= 0.f)
+				if (letterDef->width <= 0.f || letterDef->height <= 0.f)
 				{
 					letter = TileLetter::create();
 				}
@@ -985,7 +988,7 @@ void TileSceneLayer::recordLetterInfo(const cocos2d::Vec2& point, TileID utf32Ch
 	}
 	//_lettersInfo[letterIndex].lineIndex = lineIndex;
 	_lettersInfo[letterIndex].utf32Char = utf32Char;
-	_lettersInfo[letterIndex].valid = _tileAtlas->_letterDefinitions[utf32Char].validDefinition;
+	_lettersInfo[letterIndex].valid = _tileAtlas->_letterDefinitions[utf32Char]->validDefinition;
 	_lettersInfo[letterIndex].positionX = point.x;
 	_lettersInfo[letterIndex].positionY = point.y;
 	_lettersInfo[letterIndex].atlasIndex = -1;
