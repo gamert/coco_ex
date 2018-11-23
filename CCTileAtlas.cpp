@@ -22,8 +22,8 @@ TileLetterDefinition *TileLetterDefinition::New()
 }
 
 //TODO: 测试大小是否有效降低mem dc等...
-const int TileAtlas::CacheTextureWidth = 1024 * 2;
-const int TileAtlas::CacheTextureHeight = 1024*2;
+const int TileAtlas::CacheTextureWidth = 1024*2;
+const int TileAtlas::CacheTextureHeight = 1024;
 const char* TileAtlas::CMD_PURGE_TILEATLAS = "__cc_PURGE_TILEATLAS";
 const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
