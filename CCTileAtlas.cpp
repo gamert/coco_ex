@@ -15,8 +15,8 @@
 NS_CC_BEGIN
 
 //TODO: 测试大小是否有效降低mem dc等...
-const int TileAtlas::CacheTextureWidth = 1024;
-const int TileAtlas::CacheTextureHeight = 1024;
+const int TileAtlas::CacheTextureWidth = 1024 * 2;
+const int TileAtlas::CacheTextureHeight = 1024*2;
 const char* TileAtlas::CMD_PURGE_TILEATLAS = "__cc_PURGE_TILEATLAS";
 const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
@@ -251,28 +251,31 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 			tempDef.offsetX = tempRect.origin.x - adjustForDistanceMap - adjustForExtend;
 			tempDef.offsetY = _fontAscender + tempRect.origin.y - adjustForDistanceMap - adjustForExtend;
 
+			//行宽超出？
 			if (_currentPageOrigX + tempDef.width > CacheTextureWidth)
 			{
 				_currentPageOrigY += _currLineHeight;
 				_currLineHeight = 0;
 				_currentPageOrigX = 0;
-				if (_currentPageOrigY + _lineHeight + _letterPadding + _letterEdgeExtend >= CacheTextureHeight)
-				{
-					unsigned char *data = _currentPageData;
-					if (startY != 0)
-					{
-						//assert(startY == 0);
-						data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat)/8;
-					}
-					_atlasTextures[_currentPage]->updateWithData(data, 0, startY,
-						CacheTextureWidth, CacheTextureHeight - startY);
-					startY = 0.0f;
-					_currentPageOrigY = 0;
-					_currentPage++;
-
-					addOnePage();
-				}
 			}
+			//行高超出？
+			if (_currentPageOrigY + bitmapHeight + _letterPadding + _letterEdgeExtend >= CacheTextureHeight)
+			{
+				unsigned char *data = _currentPageData;
+				if (startY != 0)
+				{
+					//assert(startY == 0);
+					data += CacheTextureWidth * (int)startY * PixelFormatBits((Texture2D::PixelFormat)pixelFormat) / 8;
+				}
+				_atlasTextures[_currentPage]->updateWithData(data, 0, startY,
+					CacheTextureWidth, CacheTextureHeight - startY);
+				startY = 0.0f;
+				_currentPageOrigY = 0;
+				_currentPage++;
+
+				addOnePage();
+			}
+
 			glyphHeight = static_cast<int>(bitmapHeight) + _letterPadding + _letterEdgeExtend;
 			if (glyphHeight > _currLineHeight)
 			{
