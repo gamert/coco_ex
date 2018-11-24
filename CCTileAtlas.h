@@ -55,11 +55,11 @@ typedef struct _tileConfig
 typedef unsigned int TileID;
 struct TileChar
 {
-	TileChar(TileID _id,int _x,int _y):id(_id), x(_x), y(_y)
+	TileChar(TileID _id,int _x,int _y, int _z):id(_id), x(_x), y(_y), z(_z)
 	{
 	}
 	TileID id;	//TODO: FrameIndex,PackIndex,TexID
-	int x,y;
+	int x,y,z;
 };
 typedef std::vector<TileChar> TileString;
 //typedef std::u32string TileString;	//

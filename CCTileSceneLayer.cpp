@@ -459,7 +459,7 @@ bool TileSceneLayer::alignText()
 		//...
 		for (int i = 0; i < (int)_utf32Text.size(); ++i)
 		{
-			Vec2 point(_utf32Text[i].x + c_offx, c_offy - _utf32Text[i].y);
+			Vec3 point(_utf32Text[i].x + c_offx, c_offy - _utf32Text[i].y, _utf32Text[i].z);
 			recordLetterInfo(point, _utf32Text[i].id, i, 0);
 		}
 
@@ -485,10 +485,11 @@ bool TileSceneLayer::updateQuads()
 
 	for (int ctr = 0; ctr < _lengthOfString; ++ctr)
 	{
-		if (_lettersInfo[ctr].valid)
+		LetterInfo &Li = _lettersInfo[ctr];
+		if (Li.valid)
 		{
 			//z: get from atlas
-			TileLetterDefinition* letterDef = _tileAtlas->_letterDefinitions[_lettersInfo[ctr].utf32Char];
+			TileLetterDefinition* letterDef = _tileAtlas->_letterDefinitions[Li.utf32Char];
 
 			for (;letterDef != NULL;letterDef = letterDef->pNext)
 			{
@@ -499,7 +500,7 @@ bool TileSceneLayer::updateQuads()
 
 				//暂时不支持裁切..
 				//FIX&&TODO: check (-letterDef->offsetY)
-				auto py = _lettersInfo[ctr].positionY - letterDef->offsetY;//+ _letterOffsetY
+				auto py = Li.positionY - letterDef->offsetY;//+ _letterOffsetY
 				//
 				//if (_labelHeight > 0.f) {
 				//	if (py > _tailoredTopY)
@@ -515,8 +516,8 @@ bool TileSceneLayer::updateQuads()
 				//	}
 				//}
 
-				//auto lineIndex = _lettersInfo[ctr].lineIndex;
-				//auto px = _lettersInfo[ctr].positionX + letterDef->width / 2 * _bmtileScale + _linesOffsetX[lineIndex];
+				//auto lineIndex = Li.lineIndex;
+				//auto px = Li.positionX + letterDef->width / 2 * _bmtileScale + _linesOffsetX[lineIndex];
 
 				////窗口的宽度？
 				//if (_labelWidth > 0.f) {
@@ -542,11 +543,12 @@ bool TileSceneLayer::updateQuads()
 				{
 					_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
 					//fix: 原始图有位置偏移 
-					float letterPositionX = _lettersInfo[ctr].positionX + letterDef->offsetX;// +_linesOffsetX[_lettersInfo[ctr].lineIndex];
+					float letterPositionX = Li.positionX + letterDef->offsetX;// +_linesOffsetX[Li.lineIndex];
 					_reusedLetter->setPosition(letterPositionX, py);
 					auto index = static_cast<int>(_batchNodes.at(letterDef->textureID)->getTextureAtlas()->getTotalQuads());
-					_lettersInfo[ctr].atlasIndex = index;
-
+					Li.atlasIndex = index;
+					//使用z:
+					_reusedLetter->setPositionZ(Li.positionZ*0.05f);
 					this->updateLetterSpriteScale(_reusedLetter);
 
 					_batchNodes.at(letterDef->textureID)->insertQuadFromSprite(_reusedLetter, index);
@@ -978,8 +980,8 @@ void TileSceneLayer::updateLetterSpriteScale(Sprite* sprite)
 	}
 }
 
-
-void TileSceneLayer::recordLetterInfo(const cocos2d::Vec2& point, TileID utf32Char, int letterIndex, int lineIndex)
+//生成绘制Tile:
+void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex)
 {
 	if (static_cast<std::size_t>(letterIndex) >= _lettersInfo.size())
 	{
@@ -991,6 +993,7 @@ void TileSceneLayer::recordLetterInfo(const cocos2d::Vec2& point, TileID utf32Ch
 	_lettersInfo[letterIndex].valid = _tileAtlas->_letterDefinitions[utf32Char]->validDefinition;
 	_lettersInfo[letterIndex].positionX = point.x;
 	_lettersInfo[letterIndex].positionY = point.y;
+	_lettersInfo[letterIndex].positionZ = point.z;
 	_lettersInfo[letterIndex].atlasIndex = -1;
 }
 
