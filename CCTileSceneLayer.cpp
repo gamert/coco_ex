@@ -988,9 +988,10 @@ void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Ch
 		LetterInfo tmpInfo;
 		_lettersInfo.push_back(tmpInfo);
 	}
+	TileLetterDefinition *td = _tileAtlas->_letterDefinitions[utf32Char];
 	//_lettersInfo[letterIndex].lineIndex = lineIndex;
 	_lettersInfo[letterIndex].utf32Char = utf32Char;
-	_lettersInfo[letterIndex].valid = _tileAtlas->_letterDefinitions[utf32Char]->validDefinition;
+	_lettersInfo[letterIndex].valid = td->validDefinition;
 	_lettersInfo[letterIndex].positionX = point.x;
 	_lettersInfo[letterIndex].positionY = point.y;
 	_lettersInfo[letterIndex].positionZ = point.z;
