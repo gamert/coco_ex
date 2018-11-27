@@ -78,9 +78,9 @@ public:
 		_utf32Text = _tiles;
 		_contentDirty = true;
 	}
-	void addTile(TileID id, int x, int y,int z)
+	void addTile(TileID id, int x, int y,int z, unsigned int Color)
 	{
-		_utf32Text.push_back(TileChar(id,x, y, z));
+		_utf32Text.push_back(TileChar(id,x, y, z, Color));
 		_contentDirty = true;
 	}
 	void clearTiles()
@@ -190,6 +190,7 @@ protected:
 		float positionY;
 		float positionZ;
 		int atlasIndex;
+		unsigned int color;
 		//int lineIndex;
 	};
 
@@ -204,7 +205,7 @@ protected:
 	void updateLabelLetters();
 	virtual bool alignText();
 
-	void recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex);
+	void recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex,unsigned int color = -1);
 	void recordPlaceholderInfo(int letterIndex, TileID utf16Char);
 
 	bool updateQuads();

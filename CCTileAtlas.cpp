@@ -259,6 +259,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 			bitmapHeight= tbs[k].outHeight;
 			pix_format = tbs[k].format;
 			Rect &tempRect = tbs[k].outRect;
+			bool shouldDelData = tbs[k].shouldDelData;
 			if (bitmap && bitmapWidth > 0 && bitmapHeight > 0)
 			{
 				//check format...
@@ -313,6 +314,11 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 				tempDef->height = tempDef->height / scaleFactor;
 				tempDef->U = tempDef->U / scaleFactor;
 				tempDef->V = tempDef->V / scaleFactor;
+
+				if (shouldDelData)
+				{
+					delete[] bitmap;
+				}
 			}
 			else {
 				if (bitmap)

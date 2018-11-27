@@ -46,7 +46,8 @@ typedef struct _tileConfig
 	std::string tileFilePath;
 	float tileSize;
 	int  pixelFormat;
-	_tileConfig(float size = CC_DEFAULT_TILE_LABEL_SIZE) :tileSize(size)
+	bool bAlpha;
+	_tileConfig(float size = CC_DEFAULT_TILE_LABEL_SIZE) :tileSize(size), bAlpha(false)
 	{
 	}
 } TILEConfig;
@@ -55,11 +56,12 @@ typedef struct _tileConfig
 typedef unsigned int TileID;
 struct TileChar
 {
-	TileChar(TileID _id,int _x,int _y, int _z):id(_id), x(_x), y(_y), z(_z)
+	TileChar(TileID _id,int _x,int _y, int _z, unsigned int _Color):id(_id), x(_x), y(_y), z(_z),Color(_Color)
 	{
 	}
 	TileID id;	//TODO: FrameIndex,PackIndex,TexID
 	int x,y,z;
+	unsigned int Color;
 };
 typedef std::vector<TileChar> TileString;
 //typedef std::u32string TileString;	//

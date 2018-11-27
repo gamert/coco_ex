@@ -460,7 +460,7 @@ bool TileSceneLayer::alignText()
 		for (int i = 0; i < (int)_utf32Text.size(); ++i)
 		{
 			Vec3 point(_utf32Text[i].x + c_offx, c_offy - _utf32Text[i].y, _utf32Text[i].z);
-			recordLetterInfo(point, _utf32Text[i].id, i, 0);
+			recordLetterInfo(point, _utf32Text[i].id, i, 0, _utf32Text[i].Color);
 		}
 
 		if (!updateQuads()) {
@@ -474,6 +474,22 @@ bool TileSceneLayer::alignText()
 	return ret;
 }
 
+void SetBatchNodeColor(SpriteBatchNode *batchNode,int index, Color4B &color4)
+{
+	cocos2d::TextureAtlas* textureAtlas;
+	V3F_C4B_T2F_Quad *quads;
+
+	textureAtlas = batchNode->getTextureAtlas();
+	quads = textureAtlas->getQuads();
+	assert(index < textureAtlas->getTotalQuads());
+	{
+		quads[index].bl.colors = color4;
+		quads[index].br.colors = color4;
+		quads[index].tl.colors = color4;
+		quads[index].tr.colors = color4;
+		textureAtlas->updateQuad(&quads[index], index);
+	}
+}
 
 bool TileSceneLayer::updateQuads()
 {
@@ -551,7 +567,14 @@ bool TileSceneLayer::updateQuads()
 					_reusedLetter->setPositionZ(Li.positionZ*0.05f);
 					this->updateLetterSpriteScale(_reusedLetter);
 
-					_batchNodes.at(letterDef->textureID)->insertQuadFromSprite(_reusedLetter, index);
+					SpriteBatchNode* bnode = _batchNodes.at(letterDef->textureID);
+					bnode->insertQuadFromSprite(_reusedLetter, index);
+					if (Li.color!=-1)
+					{
+						//
+						Color4B color4((Li.color>>16)&0xFF, (Li.color >> 8) & 0xFF, (Li.color) & 0xFF, (Li.color >> 24) & 0xFF);
+						SetBatchNodeColor(bnode, index, color4);
+					}
 				}
 			}
 		}
@@ -847,6 +870,7 @@ void TileSceneLayer::setTextColor(const Color4B &color)
 	_textColorF.a = _textColor.a / 255.0f;
 }
 
+//TODO:
 void TileSceneLayer::updateColor()
 {
 	if (_batchNodes.empty())
@@ -854,33 +878,33 @@ void TileSceneLayer::updateColor()
 		return;
 	}
 
-	Color4B color4(_displayedColor.r, _displayedColor.g, _displayedColor.b, _displayedOpacity);
+	//Color4B color4(_displayedColor.r, _displayedColor.g, _displayedColor.b, _displayedOpacity);
 
-	// special opacity for premultiplied textures
-	if (_isOpacityModifyRGB)
-	{
-		color4.r *= _displayedOpacity / 255.0f;
-		color4.g *= _displayedOpacity / 255.0f;
-		color4.b *= _displayedOpacity / 255.0f;
-	}
+	//// special opacity for premultiplied textures
+	//if (_isOpacityModifyRGB)
+	//{
+	//	color4.r *= _displayedOpacity / 255.0f;
+	//	color4.g *= _displayedOpacity / 255.0f;
+	//	color4.b *= _displayedOpacity / 255.0f;
+	//}
 
-	cocos2d::TextureAtlas* textureAtlas;
-	V3F_C4B_T2F_Quad *quads;
-	for (auto&& batchNode : _batchNodes)
-	{
-		textureAtlas = batchNode->getTextureAtlas();
-		quads = textureAtlas->getQuads();
-		auto count = textureAtlas->getTotalQuads();
+	//cocos2d::TextureAtlas* textureAtlas;
+	//V3F_C4B_T2F_Quad *quads;
+	//for (auto&& batchNode : _batchNodes)
+	//{
+	//	textureAtlas = batchNode->getTextureAtlas();
+	//	quads = textureAtlas->getQuads();
+	//	auto count = textureAtlas->getTotalQuads();
 
-		for (int index = 0; index < count; ++index)
-		{
-			quads[index].bl.colors = color4;
-			quads[index].br.colors = color4;
-			quads[index].tl.colors = color4;
-			quads[index].tr.colors = color4;
-			textureAtlas->updateQuad(&quads[index], index);
-		}
-	}
+	//	for (int index = 0; index < count; ++index)
+	//	{
+	//		quads[index].bl.colors = color4;
+	//		quads[index].br.colors = color4;
+	//		quads[index].tl.colors = color4;
+	//		quads[index].tr.colors = color4;
+	//		textureAtlas->updateQuad(&quads[index], index);
+	//	}
+	//}
 }
 
 std::string TileSceneLayer::getDescription() const
@@ -981,7 +1005,7 @@ void TileSceneLayer::updateLetterSpriteScale(Sprite* sprite)
 }
 
 //Éú³É»æÖÆTile:
-void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex)
+void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex, unsigned int color )
 {
 	if (static_cast<std::size_t>(letterIndex) >= _lettersInfo.size())
 	{
@@ -996,6 +1020,7 @@ void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Ch
 	_lettersInfo[letterIndex].positionY = point.y;
 	_lettersInfo[letterIndex].positionZ = point.z;
 	_lettersInfo[letterIndex].atlasIndex = -1;
+	_lettersInfo[letterIndex].color = color;
 }
 
 void TileSceneLayer::recordPlaceholderInfo(int letterIndex, TileID utf32Char)
