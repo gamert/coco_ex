@@ -350,67 +350,68 @@ void TileSceneLayer::restoreTileSize()
 	this->setTILEConfigInternal(ttfConfig);
 }
 
-//¸üÐÂÍ¼ÔªÎ»ÖÃ...
+//ï¿½ï¿½ï¿½ï¿½Í¼ÔªÎ»ï¿½ï¿½...
 void TileSceneLayer::updateLabelLetters()
 {
 	if (_letters.empty())
 	{
 		return;
 	}
-	Rect uvRect;
-	TileLetter* letterSprite;
-	int letterIndex;
-
-	for (auto it = _letters.begin(); it != _letters.end();)
-	{
-		letterIndex = it->first;
-		letterSprite = (TileLetter*)it->second;
-
-		if (letterIndex >= _lengthOfString)
-		{
-			Node::removeChild(letterSprite, true);
-			it = _letters.erase(it);
-		}
-		else
-		{
-			auto& letterInfo = _lettersInfo[letterIndex];
-			if (letterInfo.valid)
-			{
-				auto& letterDef = _tileAtlas->_letterDefinitions[letterInfo.utf32Char];
-				uvRect.size.height = letterDef->height;
-				uvRect.size.width = letterDef->width;
-				uvRect.origin.x = letterDef->U;
-				uvRect.origin.y = letterDef->V;
-
-				auto batchNode = _batchNodes.at(letterDef->textureID);
-				letterSprite->setTextureAtlas(batchNode->getTextureAtlas());
-				letterSprite->setTexture(_tileAtlas->getTexture(letterDef->textureID));
-				if (letterDef->width <= 0.f || letterDef->height <= 0.f)
-				{
-					letterSprite->setTextureAtlas(nullptr);
-				}
-				else
-				{
-					letterSprite->setTextureRect(uvRect, false, uvRect.size);
-					letterSprite->setTextureAtlas(_batchNodes.at(letterDef->textureID)->getTextureAtlas());
-					letterSprite->setAtlasIndex(_lettersInfo[letterIndex].atlasIndex);
-				}
-
-				auto px = letterInfo.positionX + letterDef->width / 2;// +_linesOffsetX[letterInfo.lineIndex];
-				auto py = letterInfo.positionY - letterDef->height / 2;// +_letterOffsetY;
-				letterSprite->setPosition(px, py);
-			}
-			else
-			{
-				letterSprite->setTextureAtlas(nullptr);
-			}
-			this->updateLetterSpriteScale(letterSprite);
-			++it;
-		}
-	}
+	assert(false);
+//	Rect uvRect;
+//	TileLetter* letterSprite;
+//	int letterIndex;
+//
+//	for (auto it = _letters.begin(); it != _letters.end();)
+//	{
+//		letterIndex = it->first;
+//		letterSprite = (TileLetter*)it->second;
+//
+//		if (letterIndex >= _lengthOfString)
+//		{
+//			Node::removeChild(letterSprite, true);
+//			it = _letters.erase(it);
+//		}
+//		else
+//		{
+//			auto& letterInfo = _lettersInfo[letterIndex];
+//			if (letterInfo.valid)
+//			{
+//				auto& letterDef = _tileAtlas->_letterDefinitions[letterInfo.utf32Char];
+//				uvRect.size.height = letterDef->height;
+//				uvRect.size.width = letterDef->width;
+//				uvRect.origin.x = letterDef->U;
+//				uvRect.origin.y = letterDef->V;
+//
+//				auto batchNode = _batchNodes.at(letterDef->textureID);
+//				letterSprite->setTextureAtlas(batchNode->getTextureAtlas());
+//				letterSprite->setTexture(_tileAtlas->getTexture(letterDef->textureID));
+//				if (letterDef->width <= 0.f || letterDef->height <= 0.f)
+//				{
+//					letterSprite->setTextureAtlas(nullptr);
+//				}
+//				else
+//				{
+//					letterSprite->setTextureRect(uvRect, false, uvRect.size);
+//					letterSprite->setTextureAtlas(_batchNodes.at(letterDef->textureID)->getTextureAtlas());
+//					letterSprite->setAtlasIndex(_lettersInfo[letterIndex].atlasIndex);
+//				}
+//
+//				auto px = letterInfo.positionX + letterDef->width / 2;// +_linesOffsetX[letterInfo.lineIndex];
+//				auto py = letterInfo.positionY - letterDef->height / 2;// +_letterOffsetY;
+//				letterSprite->setPosition(px, py);
+//			}
+//			else
+//			{
+//				letterSprite->setTextureAtlas(nullptr);
+//			}
+//			this->updateLetterSpriteScale(letterSprite);
+//			++it;
+//		}
+//	}
 }
 
-//ÖØÅÅÎÄ±¾(Tile): 
+//ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½(Tile): 
 bool TileSceneLayer::alignText()
 {
 	if (_tileAtlas == nullptr || _utf32Text.empty())
@@ -494,9 +495,11 @@ void SetBatchNodeColor(SpriteBatchNode *batchNode,int index, Color4B &color4)
 bool TileSceneLayer::updateQuads()
 {
 	bool ret = true;
+	cocos2d::TextureAtlas* textureAtlas;
 	for (auto&& batchNode : _batchNodes)
 	{
-		batchNode->getTextureAtlas()->removeAllQuads();
+		textureAtlas = batchNode->getTextureAtlas();
+		textureAtlas->removeAllQuads();
 	}
 
 	for (int ctr = 0; ctr < _lengthOfString; ++ctr)
@@ -514,7 +517,7 @@ bool TileSceneLayer::updateQuads()
 				_reusedRect.origin.x = letterDef->U;
 				_reusedRect.origin.y = letterDef->V;
 
-				//ÔÝÊ±²»Ö§³Ö²ÃÇÐ..
+				//ï¿½ï¿½Ê±ï¿½ï¿½Ö§ï¿½Ö²ï¿½ï¿½ï¿½..
 				//FIX&&TODO: check (-letterDef->offsetY)
 				auto py = Li.positionY - letterDef->offsetY;//+ _letterOffsetY
 				//
@@ -535,7 +538,7 @@ bool TileSceneLayer::updateQuads()
 				//auto lineIndex = Li.lineIndex;
 				//auto px = Li.positionX + letterDef->width / 2 * _bmtileScale + _linesOffsetX[lineIndex];
 
-				////´°¿ÚµÄ¿í¶È£¿
+				////ï¿½ï¿½ï¿½ÚµÄ¿ï¿½È£ï¿½
 				//if (_labelWidth > 0.f) {
 				//	if (this->isHorizontalClamped(px, lineIndex)) {
 				//		if (_overflow == Overflow::CLAMP) {
@@ -558,16 +561,16 @@ bool TileSceneLayer::updateQuads()
 				if (_reusedRect.size.height > 0.f && _reusedRect.size.width > 0.f)
 				{
 					_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
-					//fix: Ô­Ê¼Í¼ÓÐÎ»ÖÃÆ«ÒÆ 
+					//fix: Ô­Ê¼Í¼ï¿½ï¿½Î»ï¿½ï¿½Æ«ï¿½ï¿½ 
 					float letterPositionX = Li.positionX + letterDef->offsetX;// +_linesOffsetX[Li.lineIndex];
 					_reusedLetter->setPosition(letterPositionX, py);
-					auto index = static_cast<int>(_batchNodes.at(letterDef->textureID)->getTextureAtlas()->getTotalQuads());
+                    SpriteBatchNode* bnode = _batchNodes.at(letterDef->textureID);
+					auto index = static_cast<int>(bnode->getTextureAtlas()->getTotalQuads());
 					Li.atlasIndex = index;
-					//Ê¹ÓÃz:
+					//Ê¹ï¿½ï¿½z:
 					_reusedLetter->setPositionZ(Li.positionZ*0.05f);
 					this->updateLetterSpriteScale(_reusedLetter);
 
-					SpriteBatchNode* bnode = _batchNodes.at(letterDef->textureID);
 					bnode->insertQuadFromSprite(_reusedLetter, index);
 					if (Li.color!=-1)
 					{
@@ -1004,7 +1007,7 @@ void TileSceneLayer::updateLetterSpriteScale(Sprite* sprite)
 	}
 }
 
-//Éú³É»æÖÆTile:
+//ï¿½ï¿½ï¿½É»ï¿½ï¿½ï¿½Tile:
 void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex, unsigned int color )
 {
 	if (static_cast<std::size_t>(letterIndex) >= _lettersInfo.size())

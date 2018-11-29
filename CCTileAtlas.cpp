@@ -21,9 +21,9 @@ TileLetterDefinition *TileLetterDefinition::New()
 	return p;
 }
 
-//TODO: ²âÊÔ´óÐ¡ÊÇ·ñÓÐÐ§½µµÍmem dcµÈ...
-const int TileAtlas::CacheTextureWidth = 1024*2;
-const int TileAtlas::CacheTextureHeight = 1024;
+//TODO: ï¿½ï¿½ï¿½Ô´ï¿½Ð¡ï¿½Ç·ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½mem dcï¿½ï¿½...
+const int TileAtlas::CacheTextureWidth = 1024;
+const int TileAtlas::CacheTextureHeight = 1024*2;
 const char* TileAtlas::CMD_PURGE_TILEATLAS = "__cc_PURGE_TILEATLAS";
 const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
@@ -247,7 +247,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 	TileBitmaps_t tbs[MAX_TBS];
 	for (auto&& it : newChars)
 	{
-		//from TextureManager: 1. ¶àÖ¡
+		//from TextureManager: 1. ï¿½ï¿½Ö¡
 		int count = getTileBitmaps(it.id, tbs, MAX_TBS);
 		//unsigned char* bitmap = getTileBitmap(it.id, bitmapWidth, bitmapHeight, tempRect, pix_format);
 		for (int k = 0; k < count; k++)
@@ -271,14 +271,14 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 				tempDef->offsetX = tempRect.origin.x - adjustForDistanceMap - adjustForExtend;
 				tempDef->offsetY = _fontAscender + tempRect.origin.y - adjustForDistanceMap - adjustForExtend;
 
-				//ÐÐ¿í³¬³ö£¿
+				//ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½ï¿½
 				if (_currentPageOrigX + tempDef->width > CacheTextureWidth)
 				{
 					_currentPageOrigY += _currLineHeight;
 					_currLineHeight = 0;
 					_currentPageOrigX = 0;
 				}
-				//ÐÐ¸ß³¬³ö£¿
+				//ï¿½Ð¸ß³ï¿½ï¿½ï¿½ï¿½ï¿½
 				if (_currentPageOrigY + bitmapHeight + _letterPadding + _letterEdgeExtend >= CacheTextureHeight)
 				{
 					unsigned char *data = _currentPageData;
