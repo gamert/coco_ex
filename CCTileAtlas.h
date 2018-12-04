@@ -9,6 +9,14 @@
 #include <vector>
 #include <unordered_map>
 
+#define USE_RBP_PACK
+
+#ifdef USE_RBP_PACK
+namespace rbp {
+	class MaxRectsBinPack;
+}
+#endif
+
 NS_CC_BEGIN
 
 class Texture2D;
@@ -20,9 +28,9 @@ typedef float UAxis;
 //ref : 
 struct TileLetterDefinition
 {
-	UAxis U;		//ÎÆÀíÔÚatlasÉÏµÄÎ»ÖÃ.
+	UAxis U;		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½atlasï¿½Ïµï¿½Î»ï¿½ï¿½.
 	UAxis V;
-	UAxis width;	//¿í¸ß
+	UAxis width;	//ï¿½ï¿½ï¿½
 	UAxis height;
 	UAxis offsetX;	//
 	UAxis offsetY;
@@ -89,6 +97,12 @@ public:
 	bool getLetterDefinitionForChar(TileID utf32Char, TileLetterDefinition &letterDefinition);
 
 	bool prepareLetterDefinitions(const TileString& utf16String);
+	
+#ifdef USE_RBP_PACK	
+	//for
+	rbp::MaxRectsBinPack *m_pMaxRectsBinPack;
+	bool prepareTexDef(const TileString& utf16String);
+#endif
 
 	const TTexture2DMap& getTextures() const { return _atlasTextures; }
 	void  addTexture(Texture2D *texture, int slot);
@@ -164,12 +178,12 @@ protected:
 
 
 
-////¹ÜÀíTileµÄ¿ìËÙ»æÖÆ
+////ï¿½ï¿½ï¿½ï¿½Tileï¿½Ä¿ï¿½ï¿½Ù»ï¿½ï¿½ï¿½
 //class CSceneTile
 //{
 //public:
 //
-//	//// ÏÔÊ¾´óµØ±í
+//	//// ï¿½ï¿½Ê¾ï¿½ï¿½Ø±ï¿½
 //	//if (sMap[i].wTile)
 //	//{
 //	//	pTex = GetTex(PACKAGE_Tiles, sMap[i].wTile, nPriority);

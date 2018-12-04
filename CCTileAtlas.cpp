@@ -10,7 +10,9 @@
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventType.h"
 #include "../DeviceFormat2cocos.h"
-
+#ifdef USE_RBP_PACK
+#include "../../../../SDK/juj_RectangleBinPack/MaxRectsBinPack.h"
+#endif
 
 NS_CC_BEGIN
 
@@ -22,8 +24,8 @@ TileLetterDefinition *TileLetterDefinition::New()
 }
 
 //TODO: ���Դ�С�Ƿ���Ч����mem dc��...
-const int TileAtlas::CacheTextureWidth = 1024;
-const int TileAtlas::CacheTextureHeight = 1024*2;
+const int TileAtlas::CacheTextureWidth = 1024*2;
+const int TileAtlas::CacheTextureHeight = 1024;
 const char* TileAtlas::CMD_PURGE_TILEATLAS = "__cc_PURGE_TILEATLAS";
 const char* TileAtlas::CMD_RESET_TILEATLAS = "__cc_RESET_TILEATLAS";
 
@@ -38,6 +40,10 @@ TileAtlas::TileAtlas(int pix_format)
 	, _antialiasEnabled(true)
 	, _currLineHeight(0)
 {
+#ifdef USE_RBP_PACK
+	m_pMaxRectsBinPack = new rbp::MaxRectsBinPack();
+	m_pMaxRectsBinPack->Init(TileAtlas::CacheTextureWidth, TileAtlas::CacheTextureHeight,false);
+#endif
 	if (true)
 	{
 		_lineHeight = 0;
@@ -221,6 +227,129 @@ bool matchFormat(int src, int dst)
 	return false;
 }
 
+#ifdef USE_RBP_PACK
+bool TileAtlas::prepareTexDef(const TileString& utf32Text)
+{
+	TileString newChars;
+	findNewCharacters(utf32Text, newChars);
+	if (newChars.empty())
+	{
+		return false;
+	}
+
+	int adjustForDistanceMap = _letterPadding / 2;
+	int adjustForExtend = _letterEdgeExtend / 2;
+	int bitmapWidth;
+	int bitmapHeight;
+	int glyphHeight;
+	//Rect tempRect;
+
+	auto scaleFactor = CC_CONTENT_SCALE_FACTOR();
+
+	TileLetterDefinition *preDef;// = NULL;
+	int pix_format = 0;
+	const int MAX_TBS = 64;
+	TileBitmaps_t tbs[MAX_TBS];
+	for (auto&& it : newChars)
+	{
+		//from TextureManager: 1. ��֡
+		int count = getTileBitmaps(it.id, tbs, MAX_TBS);
+		//unsigned char* bitmap = getTileBitmap(it.id, bitmapWidth, bitmapHeight, tempRect, pix_format);
+		for (int k = 0; k < count; k++)
+		{
+			TileLetterDefinition *tempDef = TileLetterDefinition::New();
+
+			unsigned char* bitmap = tbs[k].pData;
+			bitmapWidth = tbs[k].outWidth;
+			bitmapHeight = tbs[k].outHeight;
+			pix_format = tbs[k].format;
+			Rect &tempRect = tbs[k].outRect;
+			bool shouldDelData = tbs[k].shouldDelData;
+			if (bitmap && bitmapWidth > 0 && bitmapHeight > 0)
+			{
+				//check format...
+				//assert(matchFormat(pix_format, pixelFormat));
+
+				tempDef->validDefinition = true;
+				tempDef->width = tempRect.size.width + _letterPadding + _letterEdgeExtend;
+				tempDef->height = tempRect.size.height + _letterPadding + _letterEdgeExtend;
+				tempDef->offsetX = tempRect.origin.x - adjustForDistanceMap - adjustForExtend;
+				tempDef->offsetY = _fontAscender + tempRect.origin.y - adjustForDistanceMap - adjustForExtend;
+				
+				rbp::Rect rcResult = m_pMaxRectsBinPack->Insert(bitmapWidth, bitmapHeight, rbp::MaxRectsBinPack::RectBestShortSideFit);
+				if (rcResult.width == 0 || rcResult.height == 0)
+				{
+					unsigned char *data = _currentPageData;
+					_atlasTextures[_currentPage]->updateWithData(data, 0, 0, CacheTextureWidth, CacheTextureHeight - 0);
+					_currentPage++;
+
+					addOnePage();
+					m_pMaxRectsBinPack->Init(TileAtlas::CacheTextureWidth, TileAtlas::CacheTextureHeight, false);
+					rcResult = m_pMaxRectsBinPack->Insert(bitmapWidth, bitmapHeight, rbp::MaxRectsBinPack::RectBestShortSideFit);
+				}
+				assert(rcResult.width != 0 && rcResult.height != 0);
+
+				//
+				PixWriter_t pw(pixelFormat, _currentPageData, NS_CC::TileAtlas::CacheTextureWidth, NS_CC::TileAtlas::CacheTextureHeight);
+				pw.renderTileAt(rcResult.x, rcResult.y , bitmap, bitmapWidth, bitmapHeight, pix_format);
+
+				tempDef->U = rcResult.x;
+				tempDef->V = rcResult.y;
+				tempDef->textureID = _currentPage;
+
+				// take from pixels to points
+				tempDef->width = tempDef->width / scaleFactor;
+				tempDef->height = tempDef->height / scaleFactor;
+				tempDef->U = tempDef->U / scaleFactor;
+				tempDef->V = tempDef->V / scaleFactor;
+
+				if (shouldDelData)
+				{
+					delete[] bitmap;
+				}
+			}
+			else {
+				if (bitmap)
+				{
+					assert(false);
+					//delete[] bitmap;
+				}
+
+				tempDef->validDefinition = false;
+				tempDef->width = 0;
+				tempDef->height = 0;
+				tempDef->U = 0;
+				tempDef->V = 0;
+				tempDef->offsetX = 0;
+				tempDef->offsetY = 0;
+				tempDef->textureID = 0;
+				_currentPageOrigX += 1;
+			}
+			//Register or Link Def
+			if (k == 0)
+			{
+				_letterDefinitions[it.id] = tempDef;
+			}
+			else
+			{
+				preDef->pNext = tempDef;
+			}
+			preDef = tempDef;
+			if (tempDef->validDefinition == false)
+			{
+				Assert(false);
+				break;
+			}
+		}//end count
+	}//end chars
+
+	//partly update...	//
+	unsigned char *data = _currentPageData;
+	_atlasTextures[_currentPage]->updateWithData(data, 0, 0, CacheTextureWidth, CacheTextureHeight);
+	return true;
+}
+
+#endif
 //muti tile prepare
 bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 {
