@@ -241,7 +241,7 @@ bool TileAtlas::prepareTexDef(const TileString& utf32Text)
 	int adjustForExtend = _letterEdgeExtend / 2;
 	int bitmapWidth;
 	int bitmapHeight;
-	int glyphHeight;
+	//int glyphHeight;
 	//Rect tempRect;
 
 	auto scaleFactor = CC_CONTENT_SCALE_FACTOR();
