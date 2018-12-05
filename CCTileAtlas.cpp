@@ -156,6 +156,14 @@ void TileAtlas::purgeTexturesAtlas()
 		auto eventDispatcher = Director::getInstance()->getEventDispatcher();
 		eventDispatcher->dispatchCustomEvent(CMD_PURGE_TILEATLAS, this);
 		eventDispatcher->dispatchCustomEvent(CMD_RESET_TILEATLAS, this);
+
+#ifdef USE_RBP_PACK	
+		//for
+		if (m_pMaxRectsBinPack)
+		{
+			m_pMaxRectsBinPack->Init(TileAtlas::CacheTextureWidth, TileAtlas::CacheTextureHeight, false);
+		}
+#endif
 	}
 }
 
