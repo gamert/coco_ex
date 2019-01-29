@@ -9,7 +9,9 @@
 #include <vector>
 #include <unordered_map>
 
+#ifdef _WIN32
 #define USE_RBP_PACK
+#endif
 
 #ifdef USE_RBP_PACK
 namespace rbp {

@@ -10,6 +10,7 @@
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventType.h"
 #include "../DeviceFormat2cocos.h"
+
 #ifdef USE_RBP_PACK
 #include "../../../../SDK/juj_RectangleBinPack/MaxRectsBinPack.h"
 #endif
@@ -40,10 +41,13 @@ TileAtlas::TileAtlas(int pix_format)
 	, _antialiasEnabled(true)
 	, _currLineHeight(0)
 {
+
 #ifdef USE_RBP_PACK
 	m_pMaxRectsBinPack = new rbp::MaxRectsBinPack();
 	m_pMaxRectsBinPack->Init(TileAtlas::CacheTextureWidth, TileAtlas::CacheTextureHeight,false);
 #endif
+
+
 	if (true)
 	{
 		_lineHeight = 0;
@@ -164,6 +168,7 @@ void TileAtlas::purgeTexturesAtlas()
 			m_pMaxRectsBinPack->Init(TileAtlas::CacheTextureWidth, TileAtlas::CacheTextureHeight, false);
 		}
 #endif
+
 	}
 }
 
@@ -283,7 +288,6 @@ bool TileAtlas::prepareTexDef(const TileString& utf32Text)
 				tempDef->height = tempRect.size.height + _letterPadding + _letterEdgeExtend;
 				tempDef->offsetX = tempRect.origin.x - adjustForDistanceMap - adjustForExtend;
 				tempDef->offsetY = _fontAscender + tempRect.origin.y - adjustForDistanceMap - adjustForExtend;
-				
 				rbp::Rect rcResult = m_pMaxRectsBinPack->Insert(bitmapWidth, bitmapHeight, rbp::MaxRectsBinPack::RectBestShortSideFit);
 				if (rcResult.width == 0 || rcResult.height == 0)
 				{

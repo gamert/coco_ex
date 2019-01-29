@@ -689,7 +689,7 @@ void TileSceneLayer::draw(Renderer *renderer, const Mat4 &transform, uint32_t fl
 	if (_insideBounds)
 #endif
 	{
-		_customCommand.init(_globalZOrder, transform, flags);
+		_customCommand.init(_globalZOrder, transform, flags, ZZ_LOCAL_Z0);
 		_customCommand.func = CC_CALLBACK_0(TileSceneLayer::onDraw, this, transform, transformUpdated);
 
 		renderer->addCommand(&_customCommand);
@@ -1018,7 +1018,7 @@ void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Ch
 	TileLetterDefinition *td = _tileAtlas->_letterDefinitions[utf32Char];
 	//_lettersInfo[letterIndex].lineIndex = lineIndex;
 	_lettersInfo[letterIndex].utf32Char = utf32Char;
-	_lettersInfo[letterIndex].valid = td->validDefinition;
+	_lettersInfo[letterIndex].valid = td?td->validDefinition:false;
 	_lettersInfo[letterIndex].positionX = point.x;
 	_lettersInfo[letterIndex].positionY = point.y;
 	_lettersInfo[letterIndex].positionZ = point.z;
