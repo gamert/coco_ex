@@ -5,7 +5,7 @@
 using namespace RENDERSYSTEM;
 
 
-NS_CC::Texture2D *CCUIAtlas::LoadAtlas(unsigned tex_id)
+NS_CC::Texture2D *CCUIAtlas::GetAtlas(unsigned tex_id)
 {
 	auto it = _atlasMap.find(tex_id);
 	if (it != _atlasMap.end())
@@ -24,7 +24,10 @@ int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 	const ITexture*	 tex = g_TexMgr.GetTexImm(id);//51, index+1
 	if (NULL == tex)
 	{
-		MISS_TEX(id);
+		if (id != 0)
+		{
+			MISS_TEX(id);
+		}
 		return 0;
 	}
 	MTexture *pTex = (MTexture *)tex;

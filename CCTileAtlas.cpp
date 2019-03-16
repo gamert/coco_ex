@@ -230,15 +230,7 @@ void TileAtlas::findNewCharacters(const TileString& u32Text, TileString &newChar
 	}
 }
 
-//
-bool matchFormat(int src, int dst)
-{
-	if (src == 4)//TPT_DXT1
-		return dst == (int)Texture2D::PixelFormat::S3TC_DXT1;
-	if (src == 5)//TPT_DXT1
-		return dst == (int)Texture2D::PixelFormat::S3TC_DXT3;
-	return false;
-}
+
 
 #ifdef USE_RBP_PACK
 bool TileAtlas::prepareTexDef(const TileString& utf32Text)
@@ -490,7 +482,7 @@ bool TileAtlas::prepareLetterDefinitions(const TileString& utf32Text)
 			preDef = tempDef;
 			if (tempDef->validDefinition == false)
 			{
-				Assert(false);
+//				Assert(false);
 				break;
 			}
 		}//end count

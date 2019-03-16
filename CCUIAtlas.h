@@ -23,7 +23,7 @@ public:
 
 
 	//载入Atlas 对应的Tex，并生成Texture2D
-	NS_CC::Texture2D *LoadAtlas(unsigned);
+	NS_CC::Texture2D *GetAtlas(unsigned);
 
 	//
 	std::unordered_map<unsigned, NS_CC::Texture2D *> _atlasMap;
