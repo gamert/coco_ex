@@ -251,10 +251,10 @@ void TextureAtlas2::setupVBOandVAO()
     // tex coords
     glEnableVertexAttribArray(GLProgram::VERTEX_ATTRIB_TEX_COORD);
     glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_TEX_COORD, 2, GL_FLOAT, GL_FALSE, kQuadSize, (GLvoid*) offsetof( V3F_C4B_T2F_T2F, texCoords));
-#ifdef USE_TEXCOORDS2
+#if USE_TEXCOORDS2 == 1
 	// tex coords2
-	glEnableVertexAttribArray(GLProgram::VERTEX_ATTRIB_TEX_COORD);
-	glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_TEX_COORD, 2, GL_FLOAT, GL_FALSE, kQuadSize, (GLvoid*)offsetof(V3F_C4B_T2F_T2F, texCoords2));
+	glEnableVertexAttribArray(GLProgram::VERTEX_ATTRIB_TEX_COORD1);
+	glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_TEX_COORD1, 2, GL_FLOAT, GL_FALSE, kQuadSize, (GLvoid*)offsetof(V3F_C4B_T2F_T2F, texCoords2));
 #endif
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffersVBO[1]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(_indices[0]) * _capacity * 6, _indices, GL_STATIC_DRAW);
@@ -594,6 +594,13 @@ void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start)
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture->getName());
+
+	Texture2D* alpha = _texture->getAlphaTexture();
+	if (alpha)
+	{
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, alpha->getName());
+	}
 
     auto conf = Configuration::getInstance();
     if (conf->supportsShareableVAO() && conf->supportsMapBuffer())

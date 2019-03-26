@@ -83,6 +83,7 @@ void WaterLayerSprite::updatePoly()
 			_rect.size.width,
 			_rect.size.height);
 	}
+	setTexture2Coords(_rectMask, &_quad);
 	setTextureCoords(_rect, &_quad);
 	setVertexCoords(copyRect, &_quad);
 
@@ -166,7 +167,90 @@ void WaterLayerSprite::setTextureCoords(const Rect& rectInPoints, V3F_C4B_T2F_T2
 		outQuad->tr.texCoords.v = top;
 	}
 }
+#if USE_TEXCOORDS2 == 1
+void WaterLayerSprite::setTexture2Coords(const Rect& rectInPoints, V3F_C4B_T2F_T2F_Quad* outQuad)
+{
+	Texture2D *tex0 = _textureAtlas->getTexture();
+	if (tex0 == nullptr)
+	{
+		assert(false);
+		return;
+	}
+	Texture2D *tex = tex0->getAlphaTexture();
+	if (tex == nullptr)
+	{
+		assert(false);
+		return;
+	}
 
+	const auto rectInPixels = CC_RECT_POINTS_TO_PIXELS(rectInPoints);
+
+	const float atlasWidth = (float)tex->getPixelsWide();
+	const float atlasHeight = (float)tex->getPixelsHigh();
+
+	float rw = rectInPixels.size.width;
+	float rh = rectInPixels.size.height;
+
+	// if the rect is rotated, it means that the frame is rotated 90 degrees (clockwise) and:
+	//  - rectInpoints: origin will be the bottom-left of the frame (and not the top-right)
+	//  - size: represents the unrotated texture size
+	//
+	// so what we have to do is:
+	//  - swap texture width and height
+	//  - take into account the origin
+	//  - flip X instead of Y when flipY is enabled
+	//  - flip Y instead of X when flipX is enabled
+
+	if (_rectRotated)
+		std::swap(rw, rh);
+
+#if CC_FIX_ARTIFACTS_BY_STRECHING_TEXEL
+	float left = (2 * rectInPixels.origin.x + 1) / (2 * atlasWidth);
+	float right = left + (rw * 2 - 2) / (2 * atlasWidth);
+	float top = (2 * rectInPixels.origin.y + 1) / (2 * atlasHeight);
+	float bottom = top + (rh * 2 - 2) / (2 * atlasHeight);
+#else
+	float left = rectInPixels.origin.x / atlasWidth;
+	float right = (rectInPixels.origin.x + rw) / atlasWidth;
+	float top = rectInPixels.origin.y / atlasHeight;
+	float bottom = (rectInPixels.origin.y + rh) / atlasHeight;
+#endif // CC_FIX_ARTIFACTS_BY_STRECHING_TEXEL
+
+
+	if ((!_rectRotated && _flippedX) || (_rectRotated && _flippedY))
+	{
+		std::swap(left, right);
+	}
+
+	if ((!_rectRotated && _flippedY) || (_rectRotated && _flippedX))
+	{
+		std::swap(top, bottom);
+	}
+
+	if (_rectRotated)
+	{
+		outQuad->bl.texCoords2.u = left;
+		outQuad->bl.texCoords2.v = top;
+		outQuad->br.texCoords2.u = left;
+		outQuad->br.texCoords2.v = bottom;
+		outQuad->tl.texCoords2.u = right;
+		outQuad->tl.texCoords2.v = top;
+		outQuad->tr.texCoords2.u = right;
+		outQuad->tr.texCoords2.v = bottom;
+	}
+	else
+	{
+		outQuad->bl.texCoords2.u = left;
+		outQuad->bl.texCoords2.v = bottom;
+		outQuad->br.texCoords2.u = right;
+		outQuad->br.texCoords2.v = bottom;
+		outQuad->tl.texCoords2.u = left;
+		outQuad->tl.texCoords2.v = top;
+		outQuad->tr.texCoords2.u = right;
+		outQuad->tr.texCoords2.v = top;
+	}
+}
+#endif
 void WaterLayerSprite::setVertexCoords(const Rect& rect, V3F_C4B_T2F_T2F_Quad* outQuad)
 {
 	float relativeOffsetX = _unflippedOffsetPositionFromCenter.x;
@@ -293,6 +377,7 @@ void WaterLayerSprite::updateTransform(void)
 			_quad.tl.vertices.set(SPRITE_RENDER_IN_SUBPIXEL(dx), SPRITE_RENDER_IN_SUBPIXEL(dy), _positionZ);
 			_quad.tr.vertices.set(SPRITE_RENDER_IN_SUBPIXEL(cx), SPRITE_RENDER_IN_SUBPIXEL(cy), _positionZ);
 			setTextureCoords(_rect);
+			setTexture2Coords(_rectMask, &_quad);
 		}
 
 		// MARMALADE CHANGE: ADDED CHECK FOR nullptr, TO PERMIT SPRITES WITH NO BATCH NODE / TEXTURE ATLAS

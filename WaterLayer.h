@@ -35,7 +35,7 @@ class WaterLayerSprite: public Node, public TextureProtocol
 	BlendFunc        _blendFunc;            /// It's required for TextureProtocol inheritance
 	Texture2D*       _texture;              /// Texture2D object that is used to render the sprite
 
-	Rect _rect;
+	Rect _rect,_rectMask;
 	V3F_C4B_T2F_T2F_Quad _quad;
 	bool _recursiveDirty;
 	bool _dirty;
@@ -124,7 +124,10 @@ public:
 
 	void updatePoly();
 
-
+	void setMaskRect(const Rect& rect)
+	{
+		_rectMask = rect;
+	}
 	// override this method to generate "double scale" sprites
 	void setVertexRect(const Rect& rect)
 	{
@@ -138,6 +141,7 @@ public:
 
 	//
 	void setTextureCoords(const Rect& rectInPoints, V3F_C4B_T2F_T2F_Quad* outQuad);
+	void setTexture2Coords(const Rect& rectInPoints, V3F_C4B_T2F_T2F_Quad* outQuad);
 
 	void setVertexCoords(const Rect& rect, V3F_C4B_T2F_T2F_Quad* outQuad);
 
@@ -181,9 +185,10 @@ public:
 	//@_reusedLetter
 	//@_reusedRect: ��ʾ��Atlas�ϵ�Rect
 	//@px, py: ��Ļ����
-	void AddWaterSprite(Rect &_reusedRect, float px, float py)
+	void AddWaterSprite(Rect &_reusedRect, float px, float py, Rect &maskRect)
 	{
 		//����һ��Rect
+		_reusedLetter->setMaskRect(maskRect);
 		_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
 		//float letterPositionX = _lettersInfo[ctr].positionX + _linesOffsetX[_lettersInfo[ctr].lineIndex];
 		//����λ��
@@ -197,8 +202,7 @@ public:
 		if (_textureAtlas)
 		{
 			getGLProgram()->use();
-			//_shader->use();
-			//_shader->setUniformsForBuiltins(_mv);
+			getGLProgram()->setUniformsForBuiltins();//_mv
 			//glActiveTexture(GL_TEXTURE0);
 			//glBindTexture(GL_TEXTURE_2D, _textureID);
 			utils::setBlending(_blendFunc.src, _blendFunc.dst);
