@@ -52,20 +52,20 @@ int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 CCUIAtlas::CCUIAtlas()
 {
 	//³õÊ¼»¯Ë®
-	cocos2d::Texture2D *texture = GetAtlas(TEXID(PACKAGE_atlas0, 40));//
+    NS_CC::Texture2D *texture = GetAtlas(TEXID(PACKAGE_atlas0, 40));//
 	//texture->setGLProgram(waterp);
 
-	cocos2d::Texture2D *textureMask = GetAtlas(TEXID(PACKAGE_atlas0, 41));//
+    NS_CC::Texture2D *textureMask = GetAtlas(TEXID(PACKAGE_atlas0, 41));//
 	texture->setAlphaTexture(textureMask);
 
 	NS_CC::GLProgram* waterp = NS_CC::GLProgramCache::getInstance()->getGLProgram(NS_CC::GLProgram::SHADER_NAME_WATER_POSITION_TEXTURE_COLOR);
-	_waterAtlas = cocos2d::TextureAtlas2::createWithTexture(texture, 32);
+	_waterAtlas = NS_CC::TextureAtlas2::createWithTexture(texture, 32);
 	_WaterTileBatchNode = NS_CC::WaterTileBatchNode::Create(_waterAtlas);
 	_WaterTileBatchNode->retain();
 	_WaterTileBatchNode->setGLProgram(waterp);
 
 	NS_CC::GLProgram* water_noalpha = NS_CC::GLProgramCache::getInstance()->getGLProgram(NS_CC::GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR);
-	_waterAtlas_NoAlpha = cocos2d::TextureAtlas2::createWithTexture(texture, 32);
+	_waterAtlas_NoAlpha = NS_CC::TextureAtlas2::createWithTexture(texture, 32);
 	_WaterTileBatchNode_NoAlpha = NS_CC::WaterTileBatchNode::Create(_waterAtlas_NoAlpha);
 	_WaterTileBatchNode_NoAlpha->retain();
 	_WaterTileBatchNode_NoAlpha->setGLProgram(water_noalpha);

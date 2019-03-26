@@ -1,5 +1,14 @@
 #include "WaterLayer.h"
-
+#include "base/ccUtils.h"
+#include "base/CCDirector.h"
+#include "2d/CCSprite.h"
+#include "renderer/CCGLProgramState.h"
+#include "../../../cocos2d/cocos/platform/CCStdC.h"
+//#include "../DeviceFormat2cocos.h"
+//
+//#include "../_opengl/KSprite_gl.h"
+//#include "../MTexture.h"
+//#include "../MTextureManager.h"
 
 NS_CC_BEGIN
 #if true
@@ -440,6 +449,20 @@ void WaterTileBatchNode::Init(TextureAtlas2 * textureAtlas)
 
 }
 
+void WaterTileBatchNode::Flush(bool bAlphaMask)
+{
+	if (_textureAtlas)
+	{
+		getGLProgram()->use();
+		getGLProgram()->setUniformsForBuiltins();//_mv
+												 //glActiveTexture(GL_TEXTURE0);
+												 //glBindTexture(GL_TEXTURE_2D, _textureID);
+		utils::setBlending(_blendFunc.src, _blendFunc.dst);
+
+		_textureAtlas->drawQuads(bAlphaMask);
+		_textureAtlas->removeAllQuads();
+	}
+}
 
 
 #endif

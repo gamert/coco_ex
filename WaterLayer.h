@@ -1,14 +1,10 @@
-#include "../DeviceFormat2cocos.h"
+#ifndef WATER_LAYER_H
+#define WATER_LAYER_H
 
-#include "../_opengl/KSprite_gl.h"
-#include "../MTexture.h"
-#include "../MTextureManager.h"
+#include "CCTextureAtlas2.h"
+#include "2d/CCNode.h"
 #include "renderer/CCGLProgramCache.h"
 #include "renderer/CCGLProgram.h"
-#include "base/ccUtils.h"
-#include "base/CCDirector.h"
-#include "CCTextureAtlas2.h"
-#include "renderer/CCGLProgramState.h"
 
 NS_CC_BEGIN
 #if true
@@ -79,9 +75,9 @@ public:
 	void setAtlasIndex(ssize_t atlasIndex) { _atlasIndex = atlasIndex; }
 
 	//
-	void setTexture(Texture2D *texture);
+	void setTexture(Texture2D *texture) override;
 
-	Texture2D* getTexture() const
+	Texture2D* getTexture() const override
 	{
 		return _texture;
 	}
@@ -103,7 +99,7 @@ public:
 
 
 
-	void setPosition(float x, float y)
+	void setPosition(float x, float y) override
 	{
 		Node::setPosition(x, y);
 		setDirty(true);
@@ -154,7 +150,7 @@ public:
 	//
 	void setBatchNode(WaterTileBatchNode *spriteBatchNode);
 	bool _shouldBeHidden;
-	void updateTransform(void);
+	void updateTransform(void) override;
 
 	V3F_C4B_T2F_T2F_Quad &getQuad() { return _quad; }
 };
@@ -197,20 +193,7 @@ public:
 		insertQuadFromSprite(_reusedLetter, index);
 	}
 	//
-	void Flush(bool bAlphaMask)
-	{
-		if (_textureAtlas)
-		{
-			getGLProgram()->use();
-			getGLProgram()->setUniformsForBuiltins();//_mv
-			//glActiveTexture(GL_TEXTURE0);
-			//glBindTexture(GL_TEXTURE_2D, _textureID);
-			utils::setBlending(_blendFunc.src, _blendFunc.dst);
-
-			_textureAtlas->drawQuads(bAlphaMask);
-			_textureAtlas->removeAllQuads();
-		}
-	}
+	void Flush(bool bAlphaMask);
 
 	void insertQuadFromSprite(WaterLayerSprite *sprite, ssize_t index)
 	{
@@ -250,7 +233,7 @@ public:
 		if (!_textureAtlas->resizeCapacity(quantity))
 		{
 			// serious problems
-			CCLOGWARN("cocos2d: WARNING: Not enough memory to resize the atlas");
+			//CCLOGWARN("cocos2d: WARNING: Not enough memory to resize the atlas");
 			CCASSERT(false, "Not enough memory to resize the atlas");
 		}
 	}
@@ -261,7 +244,7 @@ public:
 	Texture2D*       _texture;              /// Texture2D object that is used to render the sprite
 
 	//
-	void setTexture(Texture2D *texture)
+	void setTexture(Texture2D *texture) override
 	{
 		if (_texture != texture)
 		{
@@ -272,7 +255,7 @@ public:
 		}
 	}
 
-	Texture2D* getTexture() const
+	Texture2D* getTexture() const override
 	{
 		return _texture;
 	}
@@ -298,3 +281,5 @@ public:
 
 #endif
 NS_CC_END
+
+#endif

@@ -668,6 +668,7 @@ void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start, bool
         glEnableVertexAttribArray(GLProgram::VERTEX_ATTRIB_POSITION);
         glEnableVertexAttribArray(GLProgram::VERTEX_ATTRIB_COLOR);
         glEnableVertexAttribArray(GLProgram::VERTEX_ATTRIB_TEX_COORD);
+		glEnableVertexAttribArray(GLProgram::VERTEX_ATTRIB_TEX_COORD1);
 
         // vertices
         glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_POSITION, 3, GL_FLOAT, GL_FALSE, kQuadSize, (GLvoid*) offsetof(V3F_C4B_T2F_T2F, vertices));
@@ -677,6 +678,9 @@ void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start, bool
 
         // tex coords
         glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_TEX_COORD, 2, GL_FLOAT, GL_FALSE, kQuadSize, (GLvoid*) offsetof(V3F_C4B_T2F_T2F, texCoords));
+
+		// tex coords
+		glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_TEX_COORD1, 2, GL_FLOAT, GL_FALSE, kQuadSize, (GLvoid*)offsetof(V3F_C4B_T2F_T2F, texCoords2));
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffersVBO[1]);
 
