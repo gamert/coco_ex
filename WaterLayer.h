@@ -15,7 +15,7 @@ NS_CC_BEGIN
 
 
 class WaterTileBatchNode;
-//²Î¿¼sprite:
+//ï¿½Î¿ï¿½sprite:
 class WaterLayerSprite: public Node, public TextureProtocol
 {
 	enum class RenderMode {
@@ -45,7 +45,7 @@ class WaterLayerSprite: public Node, public TextureProtocol
 	WaterTileBatchNode *_batchNode;
 	TextureAtlas2*   _textureAtlas;			/// SpriteBatchNode texture atlas (weak reference)
 	Mat4              _transformToBatch;
-	int				_atlasIndex;
+	int				 _atlasIndex;
 public:
 
 	WaterLayerSprite();
@@ -54,6 +54,29 @@ public:
 	{
 
 	}
+
+
+	/**
+	* Gets the weak reference of the TextureAtlas2 when the sprite is rendered using via SpriteBatchNode.
+	*/
+	TextureAtlas2* getTextureAtlas() const { return _textureAtlas; }
+
+	/**
+	* Sets the weak reference of the TextureAtlas2 when the sprite is rendered using via SpriteBatchNode.
+	*/
+	void setTextureAtlas(TextureAtlas2 *textureAtlas) { _textureAtlas = textureAtlas; }
+
+	/**
+	* Returns the index used on the TextureAtlas2.
+	*/
+	ssize_t getAtlasIndex() const { return _atlasIndex; }
+
+	/**
+	* Sets the index used on the TextureAtlas2.
+	*
+	* @warning Don't modify this value unless you know what you are doing.
+	*/
+	void setAtlasIndex(ssize_t atlasIndex) { _atlasIndex = atlasIndex; }
 
 	//
 	void setTexture(Texture2D *texture);
@@ -96,7 +119,7 @@ public:
 		setTextureRect(rect, false, rect.size);
 	}
 
-	//¸ù¾ÝÎÆÀí´óÐ¡ÉèÖÃContent´óÐ¡:
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Contentï¿½ï¿½Ð¡:
 	void setTextureRect(const Rect& rect, bool rotated, const Size& untrimmedSize);
 
 	void updatePoly();
@@ -125,12 +148,7 @@ public:
 	bool isDirty() { return _dirty; }
 
 	//
-	void setBatchNode(WaterTileBatchNode *spriteBatchNode)
-	{
-		_renderMode = RenderMode::QUAD_BATCHNODE;
-		_transformToBatch = Mat4::IDENTITY;
-		//setTextureAtlas(_batchNode->getTextureAtlas()); // weak ref
-	}
+	void setBatchNode(WaterTileBatchNode *spriteBatchNode);
 	bool _shouldBeHidden;
 	void updateTransform(void);
 
@@ -142,24 +160,45 @@ public:
 class WaterTileBatchNode : public Node, public TextureProtocol
 {
 public:
-	WaterTileBatchNode()
-	{
+	WaterTileBatchNode();
+	void Init(TextureAtlas2 * textureAtlas);
+	static WaterTileBatchNode *Create(TextureAtlas2 * textureAtlas);
 
-	}
 	WaterLayerSprite *_reusedLetter;
 	TextureAtlas2 * _textureAtlas;
+
+	/**
+	* Gets the weak reference of the TextureAtlas2 when the sprite is rendered using via SpriteBatchNode.
+	*/
+	TextureAtlas2* getTextureAtlas() const { return _textureAtlas; }
+
+	/**
+	* Sets the weak reference of the TextureAtlas2 when the sprite is rendered using via SpriteBatchNode.
+	*/
+	void setTextureAtlas(TextureAtlas2 *textureAtlas) { _textureAtlas = textureAtlas; }
+
+
 	//@_reusedLetter
-	//@_reusedRect
-	//@letterPositionX:
+	//@_reusedRect: ï¿½ï¿½Ê¾ï¿½ï¿½Atlasï¿½Ïµï¿½Rect
+	//@px, py: ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
 	void AddWaterSprite(Rect &_reusedRect, float px, float py)
 	{
-		//ÉèÖÃÒ»¸öRect
+		//ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Rect
 		_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
 		//float letterPositionX = _lettersInfo[ctr].positionX + _linesOffsetX[_lettersInfo[ctr].lineIndex];
-		//ÉèÖÃÎ»ÖÃ
+		//ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 		_reusedLetter->setPosition(px, py);
 		int index = _textureAtlas->getTotalQuads();
 		insertQuadFromSprite(_reusedLetter, index);
+	}
+	//
+	void Flush()
+	{
+		if (_textureAtlas)
+		{
+			_textureAtlas->drawQuads();
+			_textureAtlas->removeAllQuads();
+		}
 	}
 
 	void insertQuadFromSprite(WaterLayerSprite *sprite, ssize_t index)
@@ -174,7 +213,7 @@ public:
 		// update the quad directly. Don't add the sprite to the scene graph
 		//
 		sprite->setBatchNode(this);
-		//sprite->setAtlasIndex(index);
+		sprite->setAtlasIndex(index);
 
 		V3F_C4B_T2F_T2F_Quad quad = sprite->getQuad();
 		_textureAtlas->insertQuad(&quad, index);
@@ -188,12 +227,12 @@ public:
 
 	void increaseAtlasCapacity()
 	{
-		// if we're going beyond the current TextureAtlas's capacity,
+		// if we're going beyond the current TextureAtlas2's capacity,
 		// all the previously initialized sprites will need to redo their texture coords
 		// this is likely computationally expensive
 		ssize_t quantity = (_textureAtlas->getCapacity() + 1) * 4 / 3;
 
-		CCLOG("cocos2d: SpriteBatchNode: resizing TextureAtlas capacity from [%d] to [%d].",
+		CCLOG("cocos2d: SpriteBatchNode: resizing TextureAtlas2 capacity from [%d] to [%d].",
 			static_cast<int>(_textureAtlas->getCapacity()),
 			static_cast<int>(quantity));
 
@@ -205,6 +244,43 @@ public:
 		}
 	}
 
+
+	////
+	BlendFunc        _blendFunc;            /// It's required for TextureProtocol inheritance
+	Texture2D*       _texture;              /// Texture2D object that is used to render the sprite
+
+	//
+	void setTexture(Texture2D *texture)
+	{
+		if (_texture != texture)
+		{
+			CC_SAFE_RETAIN(texture);
+			CC_SAFE_RELEASE(_texture);
+			_texture = texture;
+			//updateBlendFunc();
+		}
+	}
+
+	Texture2D* getTexture() const
+	{
+		return _texture;
+	}
+
+	/// @name Functions inherited from TextureProtocol.
+	/**
+	*@code
+	*When this function bound into js or lua,the parameter will be changed.
+	*In js: var setBlendFunc(var src, var dst).
+	*In lua: local setBlendFunc(local src, local dst).
+	*@endcode
+	*/
+	void setBlendFunc(const BlendFunc &blendFunc) override { _blendFunc = blendFunc; }
+	/**
+	* @js  NA
+	* @lua NA
+	*/
+	const BlendFunc& getBlendFunc() const override { return _blendFunc; }
+	/// @}
 };
 
 

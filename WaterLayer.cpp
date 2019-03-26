@@ -216,6 +216,14 @@ void WaterLayerSprite::setVertexCoords(const Rect& rect, V3F_C4B_T2F_T2F_Quad* o
 	}
 }
 
+void WaterLayerSprite::setBatchNode(WaterTileBatchNode *spriteBatchNode)
+{
+	_batchNode = spriteBatchNode; // weak reference
+
+	_renderMode = RenderMode::QUAD_BATCHNODE;
+	_transformToBatch = Mat4::IDENTITY;
+	setTextureAtlas(_batchNode->getTextureAtlas()); // weak ref
+}
 
 void WaterLayerSprite::updateTransform(void)
 {
@@ -306,6 +314,42 @@ void WaterLayerSprite::updateTransform(void)
 	arrayMakeObjectsPerformSelector(_children, updateTransform, Sprite*);
 	}*/
 	Node::updateTransform();
+}
+
+
+WaterTileBatchNode::WaterTileBatchNode() :_texture(NULL), _textureAtlas(NULL), _reusedLetter(NULL)
+{
+	//_reusedLetter =
+
+}
+WaterTileBatchNode *WaterTileBatchNode::Create(TextureAtlas2 * textureAtlas)
+{
+	WaterTileBatchNode *p = new WaterTileBatchNode();
+	p->Init(textureAtlas);
+	p->autorelease();
+	return p;
+}
+
+void WaterTileBatchNode::Init(TextureAtlas2 * textureAtlas)
+{
+	if (_textureAtlas != textureAtlas)
+	{
+		CC_SAFE_RETAIN(textureAtlas);
+		CC_SAFE_RELEASE(_textureAtlas);
+		_textureAtlas = textureAtlas;
+		//updateBlendFunc();
+	}
+
+
+	if (_reusedLetter == nullptr)
+	{
+		_reusedLetter = new WaterLayerSprite();
+		//_reusedLetter->setOpacityModifyRGB(_isOpacityModifyRGB);
+		_reusedLetter->retain();
+		_reusedLetter->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+		_reusedLetter->setTextureAtlas(textureAtlas);
+	}
+
 }
 
 
