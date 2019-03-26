@@ -196,6 +196,13 @@ public:
 	{
 		if (_textureAtlas)
 		{
+			getGLProgram()->use();
+			//_shader->use();
+			//_shader->setUniformsForBuiltins(_mv);
+			//glActiveTexture(GL_TEXTURE0);
+			//glBindTexture(GL_TEXTURE_2D, _textureID);
+			utils::setBlending(_blendFunc.src, _blendFunc.dst);
+
 			_textureAtlas->drawQuads();
 			_textureAtlas->removeAllQuads();
 		}

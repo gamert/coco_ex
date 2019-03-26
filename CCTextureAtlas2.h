@@ -17,6 +17,8 @@ class Texture2D;
 class EventCustom;
 class EventListenerCustom;
 
+//#define USE_TEXCOORDS2
+
 struct V3F_C4B_T2F_T2F
 {
 	/// vertices (3F)
@@ -25,7 +27,9 @@ struct V3F_C4B_T2F_T2F
 	Color4B      colors;              // 4 bytes
 									  // tex coords (2F)
 	Tex2F        texCoords;           // 8 bytes
+#ifdef USE_TEXCOORDS2
 	Tex2F        texCoords2;          // 8 bytes
+#endif
 };
 
 struct V3F_C4B_T2F_T2F_Quad
