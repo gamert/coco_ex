@@ -19,6 +19,16 @@ NS_CC::Texture2D *CCUIAtlas::GetAtlas(unsigned tex_id)
 	//
 	NS_CC::Texture2D *tex = getTileTexture2D(tex_id);
 	_atlasMap[tex_id] = tex;
+
+	//zz释放FrameData数据，对于Tex Atlas，加载完成后，即可释放...
+	uint32 theChar = tex_id & 0xFFFFFF;
+	ITexture*	 ptex = (ITexture*)g_TexMgr.GetTexImm(theChar);
+	if (ptex)
+	{
+		ptex->ReleaseFrameData();
+	}
+
+
 	return tex;
 }
 
