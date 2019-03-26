@@ -319,6 +319,7 @@ void WaterLayerSprite::updateTransform(void)
 
 WaterTileBatchNode::WaterTileBatchNode() :_texture(NULL), _textureAtlas(NULL), _reusedLetter(NULL)
 {
+	_blendFunc = BlendFunc::ADDITIVE;
 	//_reusedLetter =
 
 }
@@ -346,7 +347,7 @@ void WaterTileBatchNode::Init(TextureAtlas2 * textureAtlas)
 		_reusedLetter = new WaterLayerSprite();
 		//_reusedLetter->setOpacityModifyRGB(_isOpacityModifyRGB);
 		_reusedLetter->retain();
-		_reusedLetter->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+		_reusedLetter->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 		_reusedLetter->setTextureAtlas(textureAtlas);
 	}
 

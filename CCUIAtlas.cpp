@@ -41,11 +41,15 @@ int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 
 CCUIAtlas::CCUIAtlas()
 {
+	NS_CC::GLProgram* waterp = NS_CC::GLProgramCache::getInstance()->getGLProgram(NS_CC::GLProgram::SHADER_NAME_WATER_POSITION_TEXTURE_COLOR);
 	//³õÊ¼»¯Ë®
 	cocos2d::Texture2D *texture = GetAtlas(TEXID(PACKAGE_atlas0, 40));//51, index+1
+	texture->setGLProgram(waterp);
+
 	_waterAtlas = cocos2d::TextureAtlas2::createWithTexture(texture, 40);
 	_WaterTileBatchNode = NS_CC::WaterTileBatchNode::Create(_waterAtlas);
 	_WaterTileBatchNode->retain();
+	_WaterTileBatchNode->setGLProgram(waterp);
 }
 
 //
