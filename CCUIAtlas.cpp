@@ -2,6 +2,10 @@
 #include "../DeviceFormat2cocos.h"
 #include "../MTexture.h"
 #include "../MTextureManager.h"
+
+#include "CCTextureAtlas2.h"
+#include "WaterLayer.h"
+
 using namespace RENDERSYSTEM;
 
 
@@ -32,6 +36,16 @@ int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 	}
 	MTexture *pTex = (MTexture *)tex;
 	return pTex->GetUITextueInfo(&info);
+}
+
+
+CCUIAtlas::CCUIAtlas()
+{
+	//³õÊ¼»¯Ë®
+	cocos2d::Texture2D *texture = GetAtlas(TEXID(PACKAGE_atlas0, 40));//51, index+1
+	_waterAtlas = cocos2d::TextureAtlas2::createWithTexture(texture, 40);
+	_WaterTileBatchNode = NS_CC::WaterTileBatchNode::Create(_waterAtlas);
+	_WaterTileBatchNode->retain();
 }
 
 //

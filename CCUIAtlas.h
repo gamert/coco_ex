@@ -8,15 +8,15 @@
 #include <unordered_map>
 #include "../DeviceFormat2cocos.h"
 
-//namespace cocos2d {
-//	class Texture2D;
-//}
-
-
+namespace cocos2d {
+	class TextureAtlas2;
+	class WaterTileBatchNode;
+}
 
 class CCUIAtlas
 {
 public:
+	CCUIAtlas();
 	static CCUIAtlas &Instance();
 	//0成功...
 	int GetUITextueInfo(unsigned id, UITextueInfo &info);
@@ -24,6 +24,9 @@ public:
 
 	//载入Atlas 对应的Tex，并生成Texture2D
 	NS_CC::Texture2D *GetAtlas(unsigned);
+	NS_CC::TextureAtlas2 *_waterAtlas;
+
+	NS_CC::WaterTileBatchNode *_WaterTileBatchNode;
 
 	//
 	std::unordered_map<unsigned, NS_CC::Texture2D *> _atlasMap;
