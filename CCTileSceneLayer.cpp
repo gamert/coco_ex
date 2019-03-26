@@ -411,7 +411,7 @@ void TileSceneLayer::updateLabelLetters()
 //	}
 }
 
-//�����ı�(Tile): 
+//(Tile): 
 bool TileSceneLayer::alignText()
 {
 	if (_tileAtlas == nullptr || _utf32Text.empty())
