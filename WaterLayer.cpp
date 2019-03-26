@@ -83,7 +83,8 @@ void WaterLayerSprite::updatePoly()
 			_rect.size.width,
 			_rect.size.height);
 	}
-	setTexture2Coords(_rectMask, &_quad);
+	if(_rectMask.size.width>0)
+		setTexture2Coords(_rectMask, &_quad);
 	setTextureCoords(_rect, &_quad);
 	setVertexCoords(copyRect, &_quad);
 
@@ -377,7 +378,8 @@ void WaterLayerSprite::updateTransform(void)
 			_quad.tl.vertices.set(SPRITE_RENDER_IN_SUBPIXEL(dx), SPRITE_RENDER_IN_SUBPIXEL(dy), _positionZ);
 			_quad.tr.vertices.set(SPRITE_RENDER_IN_SUBPIXEL(cx), SPRITE_RENDER_IN_SUBPIXEL(cy), _positionZ);
 			setTextureCoords(_rect);
-			setTexture2Coords(_rectMask, &_quad);
+			if (_rectMask.size.width>0)
+				setTexture2Coords(_rectMask, &_quad);
 		}
 
 		// MARMALADE CHANGE: ADDED CHECK FOR nullptr, TO PERMIT SPRITES WITH NO BATCH NODE / TEXTURE ATLAS
@@ -404,7 +406,7 @@ void WaterLayerSprite::updateTransform(void)
 
 WaterTileBatchNode::WaterTileBatchNode() :_texture(NULL), _textureAtlas(NULL), _reusedLetter(NULL)
 {
-	_blendFunc = BlendFunc::ADDITIVE;
+	_blendFunc = BlendFunc::ALPHA_NON_PREMULTIPLIED;
 	//_reusedLetter =
 
 }
@@ -432,7 +434,7 @@ void WaterTileBatchNode::Init(TextureAtlas2 * textureAtlas)
 		_reusedLetter = new WaterLayerSprite();
 		//_reusedLetter->setOpacityModifyRGB(_isOpacityModifyRGB);
 		_reusedLetter->retain();
-		_reusedLetter->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+		_reusedLetter->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 		_reusedLetter->setTextureAtlas(textureAtlas);
 	}
 

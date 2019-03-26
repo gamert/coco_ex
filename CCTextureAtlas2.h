@@ -197,18 +197,18 @@ public:
     /** Draws n quads.
     * N can't be greater than the capacity of the Atlas.
     */
-    void drawNumberOfQuads(ssize_t n);
+    void drawNumberOfQuads(ssize_t n, bool bAlpha);
 
     /** Draws n quads from an index (offset).
     N + start can't be greater than the capacity of the atlas.
 
     @since v1.0
     */
-    void drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start);
+    void drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start, bool bAlpha);
 
     /** Draws all the Atlas's Quads.
     */
-    void drawQuads();
+    void drawQuads(bool bAlpha);
     /** Listen the event that renderer was recreated on Android.
      */
     void listenRendererRecreated(EventCustom* event);

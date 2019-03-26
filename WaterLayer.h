@@ -197,7 +197,7 @@ public:
 		insertQuadFromSprite(_reusedLetter, index);
 	}
 	//
-	void Flush()
+	void Flush(bool bAlphaMask)
 	{
 		if (_textureAtlas)
 		{
@@ -207,7 +207,7 @@ public:
 			//glBindTexture(GL_TEXTURE_2D, _textureID);
 			utils::setBlending(_blendFunc.src, _blendFunc.dst);
 
-			_textureAtlas->drawQuads();
+			_textureAtlas->drawQuads(bAlphaMask);
 			_textureAtlas->removeAllQuads();
 		}
 	}

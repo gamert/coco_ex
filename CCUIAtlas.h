@@ -25,8 +25,10 @@ public:
 	//载入Atlas 对应的Tex，并生成Texture2D
 	NS_CC::Texture2D *GetAtlas(unsigned);
 	NS_CC::TextureAtlas2 *_waterAtlas;
-
 	NS_CC::WaterTileBatchNode *_WaterTileBatchNode;
+
+	NS_CC::TextureAtlas2 *_waterAtlas_NoAlpha;
+	NS_CC::WaterTileBatchNode *_WaterTileBatchNode_NoAlpha;
 
 	//
 	std::unordered_map<unsigned, NS_CC::Texture2D *> _atlasMap;

@@ -574,18 +574,18 @@ void TextureAtlas2::fillWithEmptyQuadsFromIndex(ssize_t index, ssize_t amount)
 
 // TextureAtlas2 - Drawing
 
-void TextureAtlas2::drawQuads()
+void TextureAtlas2::drawQuads( bool bAlpha)
 {
-    this->drawNumberOfQuads(_totalQuads, 0);
+    this->drawNumberOfQuads(_totalQuads, 0, bAlpha);
 }
 
-void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads)
+void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads, bool bAlpha)
 {
     CCASSERT(numberOfQuads>=0, "numberOfQuads must be >= 0");
-    this->drawNumberOfQuads(numberOfQuads, 0);
+    this->drawNumberOfQuads(numberOfQuads, 0, bAlpha);
 }
 
-void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start)
+void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start, bool bAlpha)
 {
     CCASSERT(numberOfQuads>=0 && start>=0, "numberOfQuads and start must be >= 0");
 
@@ -595,11 +595,14 @@ void TextureAtlas2::drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture->getName());
 
-	Texture2D* alpha = _texture->getAlphaTexture();
-	if (alpha)
+	if (bAlpha)
 	{
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, alpha->getName());
+		Texture2D* alpha = _texture->getAlphaTexture();
+		if (alpha)
+		{
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, alpha->getName());
+		}
 	}
 
     auto conf = Configuration::getInstance();
