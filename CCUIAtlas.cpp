@@ -44,6 +44,10 @@ int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 		}
 		return 0;
 	}
+	//if (id == 200717)
+	//{
+	//	int i = 0; i++;
+	//}
 	MTexture *pTex = (MTexture *)tex;
 	return pTex->GetUITextueInfo(&info);
 }
