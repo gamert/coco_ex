@@ -461,7 +461,7 @@ bool TileSceneLayer::alignText()
 		for (int i = 0; i < (int)_utf32Text.size(); ++i)
 		{
 			Vec3 point(_utf32Text[i].x + c_offx, c_offy - _utf32Text[i].y, _utf32Text[i].z);
-			recordLetterInfo(point, _utf32Text[i].id, i, 0, _utf32Text[i].Color);
+			recordLetterInfo(point, _utf32Text[i].id, i, 0, _utf32Text[i].Color, _utf32Text[i].scaleX);
 		}
 
 		if (!updateQuads()) {
@@ -517,7 +517,7 @@ bool TileSceneLayer::updateQuads()
 				_reusedRect.origin.x = letterDef->U;
 				_reusedRect.origin.y = letterDef->V;
 
-				//��ʱ��֧�ֲ���..
+				//
 				//FIX&&TODO: check (-letterDef->offsetY)
 				auto py = Li.positionY - letterDef->offsetY;//+ _letterOffsetY
 				//
@@ -538,7 +538,7 @@ bool TileSceneLayer::updateQuads()
 				//auto lineIndex = Li.lineIndex;
 				//auto px = Li.positionX + letterDef->width / 2 * _bmtileScale + _linesOffsetX[lineIndex];
 
-				////���ڵĿ�ȣ�
+				////
 				//if (_labelWidth > 0.f) {
 				//	if (this->isHorizontalClamped(px, lineIndex)) {
 				//		if (_overflow == Overflow::CLAMP) {
@@ -560,15 +560,29 @@ bool TileSceneLayer::updateQuads()
 
 				if (_reusedRect.size.height > 0.f && _reusedRect.size.width > 0.f)
 				{
-					_reusedLetter->setTextureRect(_reusedRect, false, _reusedRect.size);
-					//fix: ԭʼͼ��λ��ƫ�� 
-					float letterPositionX = Li.positionX + letterDef->offsetX;// +_linesOffsetX[Li.lineIndex];
-					_reusedLetter->setPosition(letterPositionX, py);
+					Size  size = _reusedRect.size;
+					//fix: 
                     SpriteBatchNode* bnode = _batchNodes.at(letterDef->textureID);
 					auto index = static_cast<int>(bnode->getTextureAtlas()->getTotalQuads());
 					Li.atlasIndex = index;
-					//ʹ��z:
+					float letterPositionX;
+					if (Li.scaleX == -1.0f)
+					{
+						//zzFix: 
+						letterPositionX = Li.positionX + 512 - letterDef->offsetX - size.width;// +_linesOffsetX[Li.lineIndex];
+						_reusedLetter->setFlippedX(true);
+						//_reusedRect.size.width = -_reusedRect.size.width;
+					}
+					else
+					{
+						letterPositionX = Li.positionX + letterDef->offsetX;// +_linesOffsetX[Li.lineIndex];
+						_reusedLetter->setFlippedX(false);
+					}
+					_reusedLetter->setPosition(letterPositionX, py);
+					//	_reusedLetter->setScaleX(Li.scaleX);
 					_reusedLetter->setPositionZ(Li.positionZ*0.05f);
+					_reusedLetter->setTextureRect(_reusedRect, false, size);
+
 					this->updateLetterSpriteScale(_reusedLetter);
 
 					bnode->insertQuadFromSprite(_reusedLetter, index);
@@ -1008,7 +1022,7 @@ void TileSceneLayer::updateLetterSpriteScale(Sprite* sprite)
 }
 
 //���ɻ���Tile:
-void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex, unsigned int color )
+void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Char, int letterIndex, int lineIndex, unsigned int color, float scaleX )
 {
 	if (static_cast<std::size_t>(letterIndex) >= _lettersInfo.size())
 	{
@@ -1024,6 +1038,7 @@ void TileSceneLayer::recordLetterInfo(const cocos2d::Vec3& point, TileID utf32Ch
 	_lettersInfo[letterIndex].positionZ = point.z;
 	_lettersInfo[letterIndex].atlasIndex = -1;
 	_lettersInfo[letterIndex].color = color;
+	_lettersInfo[letterIndex].scaleX = scaleX;
 }
 
 void TileSceneLayer::recordPlaceholderInfo(int letterIndex, TileID utf32Char)
