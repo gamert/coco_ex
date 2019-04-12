@@ -5,8 +5,66 @@
 
 #include "CCTextureAtlas2.h"
 #include "WaterLayer.h"
+#include "2d/CCSpriteBatchNode.h"
+#include "2d/CCSprite.h"
+#include "math/Vec2.h"
+//#include "platform/CCStdC.h"
+#include "base/ccUtils.h"
 
 using namespace RENDERSYSTEM;
+
+namespace cocos2d {
+
+	//
+	SpriteBatchNodeDraw::SpriteBatchNodeDraw(NS_CC::Texture2D *tex):_reusedLetter(NULL)
+	{
+		_batNode = NS_CC::SpriteBatchNode::createWithTexture(tex);
+
+		NS_CC::GLProgram* shader = NS_CC::GLProgramCache::getInstance()->getGLProgram(NS_CC::GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR);
+		_batNode->retain();
+		_batNode->setGLProgram(shader);
+
+		if (_reusedLetter == nullptr)
+		{
+			_reusedLetter = NS_CC::Sprite::create();
+			//_reusedLetter->setOpacityModifyRGB(_isOpacityModifyRGB);
+			_reusedLetter->retain();
+			_reusedLetter->setAnchorPoint(NS_CC::Vec2::ANCHOR_TOP_LEFT);
+			_reusedLetter->setTextureAtlas(_batNode->getTextureAtlas());
+		}
+
+	}
+
+	//
+	void SpriteBatchNodeDraw::DrawSprite(NS_CC::Rect &rc, float x, float y)
+	{
+		_reusedLetter->setTextureRect(rc, false, rc.size);
+		//float letterPositionX = _lettersInfo[ctr].positionX + _linesOffsetX[_lettersInfo[ctr].lineIndex];
+		_reusedLetter->setPosition(x, y);
+
+		TextureAtlas* _textureAtlas = _batNode->getTextureAtlas();
+		int index = _textureAtlas->getTotalQuads();
+		_batNode->insertQuadFromSprite(_reusedLetter, index);
+	}
+
+	//
+	void SpriteBatchNodeDraw::Flush()
+	{
+		TextureAtlas* _textureAtlas = _batNode->getTextureAtlas();
+		if (_textureAtlas)
+		{
+			_batNode->getGLProgram()->use();
+			_batNode->getGLProgram()->setUniformsForBuiltins();//_mv
+
+			const BlendFunc&_blendFunc = _batNode->getBlendFunc();
+			utils::setBlending(_blendFunc.src, _blendFunc.dst);
+
+			_textureAtlas->drawQuads();
+			_textureAtlas->removeAllQuads();
+		}
+	}
+}
+
 
 
 NS_CC::Texture2D *CCUIAtlas::GetAtlas(unsigned tex_id)
@@ -51,6 +109,33 @@ int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 	MTexture *pTex = (MTexture *)tex;
 	return pTex->GetUITextueInfo(&info);
 }
+
+//根据ID获取通用的Atlas SpriteBatchNode
+NS_CC::SpriteBatchNodeDraw *CCUIAtlas::GetTileBatchNode(unsigned tex_id)
+{
+	auto it = _atlasBatchMap.find(tex_id);
+	if (it != _atlasBatchMap.end())
+	{
+		return it->second;
+	}
+	
+	//
+	NS_CC::Texture2D *tex = getTileTexture2D(tex_id);
+	NS_CC::SpriteBatchNodeDraw *pp = new NS_CC::SpriteBatchNodeDraw(tex);
+	_atlasBatchMap[tex_id] = pp;
+	return pp;
+}
+
+//void CCUIAtlas::DrawAtlasSprite(unsigned id, NS_CC::Rect &rc, float x, float y)
+//{
+//	//NS_CC::SpriteBatchNode *p = GetTileBatchNode(pT1->GetAtlasID());
+//	//if (p)
+//	//{
+//	//	//p->
+//	//}
+//}
+
+
 
 
 CCUIAtlas::CCUIAtlas()
