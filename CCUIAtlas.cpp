@@ -19,10 +19,10 @@ namespace cocos2d {
 	SpriteBatchNodeDraw::SpriteBatchNodeDraw(NS_CC::Texture2D *tex):_reusedLetter(NULL)
 	{
 		_batNode = NS_CC::SpriteBatchNode::createWithTexture(tex);
-
-		NS_CC::GLProgram* shader = NS_CC::GLProgramCache::getInstance()->getGLProgram(NS_CC::GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR);
 		_batNode->retain();
-		_batNode->setGLProgram(shader);
+
+		//NS_CC::GLProgram* shader = NS_CC::GLProgramCache::getInstance()->getGLProgram(NS_CC::GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR);
+		//_batNode->setGLProgram(shader);
 
 		if (_reusedLetter == nullptr)
 		{
@@ -45,6 +45,9 @@ namespace cocos2d {
 		TextureAtlas* _textureAtlas = _batNode->getTextureAtlas();
 		int index = _textureAtlas->getTotalQuads();
 		_batNode->insertQuadFromSprite(_reusedLetter, index);
+
+//		glprogram->setUniformLocationWith4f(_uniformTextColor, _textColorF.r, _textColorF.g, _textColorF.b, _textColorF.a);
+
 	}
 
 	//
@@ -66,7 +69,7 @@ namespace cocos2d {
 }
 
 
-
+//bug: ï¿½ï¿½ï¿½ï¿½atlasï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½getTileTexture2D
 NS_CC::Texture2D *CCUIAtlas::GetAtlas(unsigned tex_id)
 {
 	auto it = _atlasMap.find(tex_id);
@@ -78,7 +81,7 @@ NS_CC::Texture2D *CCUIAtlas::GetAtlas(unsigned tex_id)
 	NS_CC::Texture2D *tex = getTileTexture2D(tex_id);
 	_atlasMap[tex_id] = tex;
 
-	//zzÊÍ·ÅFrameDataÊý¾Ý£¬¶ÔÓÚTex Atlas£¬¼ÓÔØÍê³Éºó£¬¼´¿ÉÊÍ·Å...
+	//zzï¿½Í·ï¿½FrameDataï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½Tex Atlasï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºó£¬¼ï¿½ï¿½ï¿½ï¿½Í·ï¿½...
 	uint32 theChar = tex_id & 0xFFFFFF;
 	ITexture*	 ptex = (ITexture*)g_TexMgr.GetTexImm(theChar);
 	if (ptex)
@@ -90,7 +93,7 @@ NS_CC::Texture2D *CCUIAtlas::GetAtlas(unsigned tex_id)
 	return tex;
 }
 
-//¸ù¾ÝUIÐèÒªÌî³äµÄÊý¾Ý..
+//ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½..
 int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 {
 	const ITexture*	 tex = g_TexMgr.GetTexImm(id);//51, index+1
@@ -110,7 +113,7 @@ int CCUIAtlas::GetUITextueInfo(unsigned id, UITextueInfo &info)
 	return pTex->GetUITextueInfo(&info);
 }
 
-//¸ù¾ÝID»ñÈ¡Í¨ÓÃµÄAtlas SpriteBatchNode
+//ï¿½ï¿½ï¿½ï¿½IDï¿½ï¿½È¡Í¨ï¿½Ãµï¿½Atlas SpriteBatchNode
 NS_CC::SpriteBatchNodeDraw *CCUIAtlas::GetTileBatchNode(unsigned tex_id)
 {
 	auto it = _atlasBatchMap.find(tex_id);
@@ -120,7 +123,7 @@ NS_CC::SpriteBatchNodeDraw *CCUIAtlas::GetTileBatchNode(unsigned tex_id)
 	}
 	
 	//
-	NS_CC::Texture2D *tex = getTileTexture2D(tex_id);
+	NS_CC::Texture2D *tex = GetAtlas(tex_id);
 	NS_CC::SpriteBatchNodeDraw *pp = new NS_CC::SpriteBatchNodeDraw(tex);
 	_atlasBatchMap[tex_id] = pp;
 	return pp;
@@ -140,7 +143,7 @@ NS_CC::SpriteBatchNodeDraw *CCUIAtlas::GetTileBatchNode(unsigned tex_id)
 
 CCUIAtlas::CCUIAtlas()
 {
-	//³õÊ¼»¯Ë®
+	//ï¿½ï¿½Ê¼ï¿½ï¿½Ë®
     NS_CC::Texture2D *texture = GetAtlas(TEXID(PACKAGE_atlas0, 40));//
 	//texture->setGLProgram(waterp);
 
